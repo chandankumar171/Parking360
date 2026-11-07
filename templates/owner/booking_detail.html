@@ -1,0 +1,85 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras static %}
+{% block page_title %}Booking #{{ b.pk }}{% endblock %}
+{% block heading %}Booking #{{ b.pk }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis fs-6">{{ b.get_status_display }}</span>
+      {% if b.booking_code %}<span class="font-display fw-bold fs-4" style="letter-spacing:.2em">{{ b.booking_code }}</span>{% endif %}
+    </div>
+
+    {% if b.status == "CONFIRMED" %}
+    <div class="action-panel mb-4">
+      <h2 class="h5">Vehicle arriving?</h2>
+      <p class="text-muted mb-3">Check {{ b.vehicle_number_plate }} ({{ b.vehicle_brand_model }}) against the details, then confirm it is parked.<br>
+        <span class="small">Check-in window: {{ opens|date:"d M, h:i A" }} to {{ closes|date:"h:i A" }}</span></p>
+      <form method="post" action="{% url 'owner:check_in' b.pk %}">{% csrf_token %}<button class="btn btn-primary btn-lg" type="submit" {% if not window_open %}disabled{% endif %}><i class="bi bi-box-arrow-in-right"></i> Vehicle parked, check in</button>
+        {% if not window_open %}<div class="small text-muted mt-2">{% if now < opens %}Too early to check in.{% else %}Grace period over. This booking will be marked as a no-show.{% endif %}</div>{% endif %}</form>
+    </div>
+    {% endif %}
+
+    {% if b.status == "CHECKED_IN" %}
+    <div class="action-panel mb-4" {% if requested and ot_amount > 0 and not ot_paid %}data-poll-url="{% url 'owner:booking_status' b.pk %}"{% endif %}>
+      <h2 class="h5">Checkout</h2>
+      <div class="money-line"><span>Paid until</span><span>{{ b.end_at|date:"d M, h:i A" }}</span></div>
+      <div class="money-line"><span>{% if requested %}Frozen at checkout{% else %}Now{% endif %}: extra time</span><span>{{ extra }} min</span></div>
+      <div class="money-line total"><span>Overtime due</span><span>{{ ot_amount|rupees }}</span></div>
+      <p class="small text-muted">Rate: {{ b.overtime_charge|rupees }} per {{ b.overtime_block_minutes }} min{% if b.overtime_free_minutes %} after {{ b.overtime_free_minutes }} free min{% endif %}, rounded up.</p>
+      {% if not requested %}
+        <form method="post" action="{% url 'owner:checkout_start' b.pk %}">{% csrf_token %}<button class="btn btn-primary" type="submit">{% if ot_amount > 0 %}Start checkout and charge overtime{% else %}Start checkout{% endif %}</button></form>
+      {% elif ot_amount > 0 and not ot_paid %}
+        <div class="alert alert-warning mb-0"><i class="bi bi-hourglass-split"></i> Waiting for the driver to pay {{ ot_amount|rupees }} from their booking page. This page updates by itself.</div>
+      {% else %}
+        {% if ot_amount > 0 %}<div class="alert alert-success py-2">Overtime of {{ ot_amount|rupees }} paid.</div>{% endif %}
+        <form method="post" action="{% url 'owner:checkout_complete' b.pk %}">{% csrf_token %}
+          <fieldset class="mb-2"><legend class="form-label">How was this driver?</legend>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfied" value="yes" id="v-yes" required><label class="form-check-label" for="v-yes"><i class="bi bi-hand-thumbs-up text-success"></i> Satisfied</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfied" value="no" id="v-no"><label class="form-check-label" for="v-no"><i class="bi bi-hand-thumbs-down text-danger"></i> Not satisfied</label></div></fieldset>
+          <label class="form-label" for="v-comment">Comment (required if not satisfied)</label><textarea class="form-control mb-3" id="v-comment" name="comment" rows="2" maxlength="500"></textarea>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-box-arrow-right"></i> Complete checkout</button></form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if pending_refund %}
+    <div class="action-panel mb-4"><h2 class="h5">Refund requested</h2>
+      <p class="mb-1">Refund of <strong>{{ pending_refund.amount|rupees }}</strong>{% if pending_refund.cancellation_charge %} (you keep {{ pending_refund.cancellation_charge|rupees }}){% endif %}.</p>
+      <p class="text-muted">"{{ pending_refund.reason|default:'No reason given' }}"</p>
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'owner:refund_approve' pending_refund.pk %}" data-confirm="Approve and refund {{ pending_refund.amount|rupees }} through Razorpay?">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-primary" type="submit">Approve and refund</button></form>
+        <form method="post" action="{% url 'owner:refund_reject' pending_refund.pk %}" class="d-flex gap-2 flex-grow-1">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><input class="form-control" name="reason" placeholder="Reason for declining" required minlength="3" aria-label="Reason for declining"><button class="btn btn-outline-danger" type="submit">Decline</button></form>
+      </div></div>
+    {% endif %}
+
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Stay</h2>
+      <dl class="kv mb-0"><dt>Parking</dt><dd>{{ b.parking.name }}</dd>
+        <dt>From</dt><dd>{{ b.start_at|date:"D d M, h:i A" }}</dd><dt>Until</dt><dd>{{ b.end_at|date:"D d M, h:i A" }} ({{ b.duration_minutes|duration }})</dd>
+        <dt>Vehicle</dt><dd>{{ b.vehicle_number_plate }} · {{ b.vehicle_brand_model }} · {{ b.get_vehicle_category_display }}</dd>
+        {% if b.checked_in_at %}<dt>Checked in</dt><dd>{{ b.checked_in_at|date:"d M, h:i A" }}</dd>{% endif %}
+        {% if b.checked_out_at %}<dt>Checked out</dt><dd>{{ b.checked_out_at|date:"d M, h:i A" }}</dd>{% endif %}</dl></div>
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Money</h2>
+      <div class="money-line"><span>Booking</span><span>{{ b.base_amount|rupees }}</span></div>
+      {% if b.platform_fee_amount %}<div class="money-line text-muted"><span>Platform fee ({{ b.platform_fee_percent|floatformat:"-2" }}%)</span><span>-{{ b.platform_fee_amount|rupees }}</span></div>{% endif %}
+      <div class="money-line total"><span>Your share</span><span>{{ b.owner_amount|rupees }}</span></div></div>
+    {% if verdict %}<div class="surface p-4 mb-3"><h2 class="h6">Your verdict</h2><p class="mb-0">{% if verdict.satisfied %}<i class="bi bi-hand-thumbs-up text-success"></i> Satisfied{% else %}<i class="bi bi-hand-thumbs-down text-danger"></i> Not satisfied{% endif %}{% if verdict.comment %}: {{ verdict.comment }}{% endif %}</p></div>{% endif %}
+    {% if refunds %}<div class="surface p-4"><h2 class="h5 mb-3">Refunds</h2>{% for r in refunds %}<div class="money-line"><span>{{ r.get_status_display }}{% if r.error_message %} <span class="small text-danger">({{ r.error_message }})</span>{% endif %}<div class="small text-muted">{{ r.created_at|date:"d M, h:i A" }}</div></span><span>{{ r.amount|rupees }}</span></div>{% endfor %}</div>{% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Driver</h2>
+      <div class="d-flex align-items-center gap-3 mb-3"><span class="avatar avatar-lg">{{ driver.initials }}</span>
+        <div><div class="fw-semibold">{{ driver.full_name }}</div><div class="small text-muted">{{ driver.phone }}</div><a class="small" href="{% url 'owner:driver_profile' driver.pk %}">View driver profile</a></div></div>
+      <div class="money-line"><span>Reliability points</span><span><strong>{{ driver.points }}</strong> <span class="pill bg-{{ driver.points_tier.css }}-subtle text-{{ driver.points_tier.css }}-emphasis">{{ driver.points_tier.label }}</span></span></div></div>
+    {% if b.status == "CONFIRMED" or b.status == "REFUND_REQUESTED" %}
+    {% if b.status == "CONFIRMED" %}
+    <div class="surface p-4"><h2 class="h6">Cancel this booking</h2><p class="small text-muted">The driver gets a full refund through Razorpay and no penalty.</p>
+      <form method="post" action="{% url 'owner:cancel_booking' b.pk %}" data-confirm="Cancel this booking and refund {{ b.base_amount|rupees }} to the driver?">{% csrf_token %}
+        <textarea class="form-control mb-2" name="reason" rows="2" required minlength="3" maxlength="255" placeholder="Reason shown to the driver" aria-label="Reason"></textarea>
+        <button class="btn btn-outline-danger" type="submit">Cancel and refund</button></form></div>{% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/gate.js' %}"></script>{% endblock %}

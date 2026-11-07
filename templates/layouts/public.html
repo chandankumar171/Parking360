@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block body %}
+{% include "partials/_navbar_public.html" %}
+{% block page %}{% endblock %}
+<footer class="py-4 mt-5 border-top" style="border-color:var(--ps-border)!important"><div class="container small text-muted d-flex flex-wrap justify-content-between gap-2">
+  <span>&copy; {% now "Y" %} ParkShare</span><span><a href="{% url 'core:landing' %}">Home</a> · <a href="{% url 'parkings:search' %}">Find parking</a> · <a href="{% url 'core:terms' %}">Terms</a> · <a href="{% url 'core:privacy' %}">Privacy</a>{% if SUPPORT_EMAIL %} · <a href="mailto:{{ SUPPORT_EMAIL }}">Contact</a>{% endif %}</span></div></footer>
+{% endblock %}

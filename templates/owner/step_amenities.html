@@ -1,0 +1,31 @@
+{% extends "owner/step_layout.html" %}
+{% block step_content %}
+<form method="post" class="surface p-4" novalidate>
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  <h3 class="h5 mb-3">What does your parking offer?</h3>
+  <p class="text-muted small">Drivers can filter on these.</p>
+  <div class="amenity-grid mb-4">
+    {% for field, icon in form.amenity_fields %}
+    <label class="amenity-card" for="{{ field.id_for_label }}">{{ field }}<span class="amenity-body"><i class="bi {{ icon }}"></i>{{ field.label }}</span></label>
+    {% endfor %}
+  </div>
+  <h3 class="h5 mb-3">Opening hours</h3>
+  <div class="form-check form-switch mb-2">{{ form.is_open }}<label class="form-check-label" for="{{ form.is_open.id_for_label }}">{{ form.is_open.label }}</label></div>
+  <div class="form-check form-switch mb-3">{{ form.is_24x7 }}<label class="form-check-label" for="{{ form.is_24x7.id_for_label }}">{{ form.is_24x7.label }}</label></div>
+  <div class="row g-3" id="hours-row">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.opening_time %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.closing_time %}</div>
+  </div>
+  <h3 class="h5 mt-3 mb-3">Bookings and cancellation</h3>
+  {% include "partials/_field.html" with field=form.grace_minutes %}
+  <div class="form-check form-switch mb-3">{{ form.allow_cancellation }}<label class="form-check-label" for="{{ form.allow_cancellation.id_for_label }}">{{ form.allow_cancellation.label }}</label></div>
+  <div class="row g-3" id="cancel-row">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.cancel_window_minutes %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.cancellation_charge_percent %}</div>
+  </div>
+  <h3 class="h5 mt-3 mb-3">House rules</h3>
+  {% include "partials/_field.html" with field=form.rules_text %}
+  {% include "partials/_step_nav.html" %}
+</form>
+{% endblock %}

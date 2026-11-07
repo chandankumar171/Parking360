@@ -1,0 +1,26 @@
+<nav class="ps-nav navbar navbar-expand-lg">
+  <div class="container">
+    <a class="brand" href="{% url 'core:landing' %}">{% include "partials/_brand.html" %}</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="publicNav">
+      <ul class="navbar-nav mx-lg-auto gap-lg-2">
+        <li class="nav-item"><a class="nav-link" href="{% url 'parkings:search' %}">Find parking</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:landing' %}#how">How it works</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:landing' %}#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:landing' %}#owners">For owners</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'core:landing' %}#faq">FAQ</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2 py-2 py-lg-0">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+        {% if user.is_authenticated %}
+          {% load ps_extras %}{% notification_bell %}
+          {% if user.role == "DRIVER" %}<a class="btn btn-outline-secondary" href="{% url 'bookings:list' %}">My bookings</a>{% endif %}
+          <a class="btn btn-primary" href="{{ home_url }}">{% if user.role == "DRIVER" %}Account{% else %}Open dashboard{% endif %}</a>
+        {% else %}
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Log in</a>
+          <a class="btn btn-primary" href="{% url 'accounts:signup' %}">Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>

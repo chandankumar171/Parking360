@@ -1,0 +1,16 @@
+{% load widget_tweaks %}
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+  {% if field.field.widget.input_type == "password" %}
+  <div class="input-group">
+    {% if field.errors %}{% render_field field class="form-control is-invalid" %}{% else %}{% render_field field class="form-control" %}{% endif %}
+    <button class="btn btn-outline-secondary" type="button" data-toggle-password aria-label="Show password"><i class="bi bi-eye"></i></button>
+  </div>
+  {% elif field.field.widget.input_type == "select" %}
+  {% if field.errors %}{% render_field field class="form-select is-invalid" %}{% else %}{% render_field field class="form-select" %}{% endif %}
+  {% else %}
+  {% if field.errors %}{% render_field field class="form-control is-invalid" %}{% else %}{% render_field field class="form-control" %}{% endif %}
+  {% endif %}
+  {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+  {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+</div>

@@ -1,0 +1,21 @@
+{% extends "layouts/panel.html" %}
+{% load static %}
+{% block page_title %}Verify code{% endblock %}
+{% block heading %}Verify code{% endblock %}
+{% block content %}
+<div class="mx-auto text-center" style="max-width:30rem">
+  <div class="surface p-4 p-md-5">
+    <span class="chip mx-auto"><i class="bi bi-qr-code-scan"></i></span>
+    <h2 class="h4">Enter the driver's code</h2>
+    <p class="text-muted">Use it to check a vehicle in at entry and out at exit.</p>
+    <form method="post" novalidate>{% csrf_token %}
+      <label class="visually-hidden" for="code-input">6-character booking code</label>
+      <input class="form-control form-control-lg code-input mb-3" id="code-input" name="code" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="K7M2QX" required>
+      <button class="btn btn-primary btn-lg w-100" type="submit">Find booking</button>
+    </form>
+    <button class="btn btn-outline-secondary w-100 mt-2" type="button" id="scan-btn"><i class="bi bi-camera"></i> Scan QR with camera</button>
+    <div id="qr-reader" class="mt-3" hidden></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/gate.js' %}"></script>{% endblock %}

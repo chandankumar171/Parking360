@@ -1,0 +1,36 @@
+{% extends "layouts/panel.html" %}
+{% block page_title %}Platform settings{% endblock %}
+{% block heading %}Platform settings{% endblock %}
+{% block content %}
+<form method="post" novalidate style="max-width:52rem">
+  {% csrf_token %}{% include "partials/_form_errors.html" %}
+  <div class="surface p-4 mb-4">
+    <h2 class="h5 mb-3">Verification</h2>
+    <div class="form-check form-switch mb-1">{{ form.verification_required }}<label class="form-check-label fw-semibold" for="{{ form.verification_required.id_for_label }}">{{ form.verification_required.label }}</label></div>
+    <p class="small text-muted ms-5">When switched off, every parking currently waiting is approved automatically. Verified parkings always show the badge; auto-approved ones do not.</p>
+    <div class="form-check form-switch mb-1">{{ form.reverify_on_edit }}<label class="form-check-label" for="{{ form.reverify_on_edit.id_for_label }}">{{ form.reverify_on_edit.label }}</label></div>
+  </div>
+  <div class="surface p-4 mb-4">
+    <h2 class="h5 mb-3">Money</h2>
+    {% include "partials/_field.html" with field=form.platform_fee_percent %}
+  </div>
+  <div class="surface p-4 mb-4">
+    <h2 class="h5 mb-3">Booking defaults</h2>
+    <div class="row g-3"><div class="col-md-6">{% include "partials/_field.html" with field=form.default_grace_minutes %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.default_cancel_window_minutes %}</div></div>
+    {% include "partials/_field.html" with field=form.support_email %}
+  </div>
+  <div class="surface p-4 mb-4">
+    <h2 class="h5 mb-3">Driver points</h2>
+    <div class="row g-3">
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_start %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_satisfied %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_unsatisfied %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_no_show %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_late_cancel %}</div>
+      <div class="col-md-6">{% include "partials/_field.html" with field=form.points_no_checkout_verify %}</div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-lg" type="submit">Save settings</button>
+</form>
+{% endblock %}

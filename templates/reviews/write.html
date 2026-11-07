@@ -1,0 +1,18 @@
+{% extends "layouts/driver.html" %}
+{% block page_title %}Rate your stay{% endblock %}
+{% block content %}
+<div class="mx-auto" style="max-width:36rem">
+  <a class="small" href="{% url 'bookings:detail' booking.pk %}"><i class="bi bi-arrow-left"></i> Back to booking</a>
+  <h1 class="h3 my-3">{% if review %}Edit your review{% else %}Rate your stay{% endif %}</h1>
+  <p class="text-muted">{{ booking.parking.name }} · {{ booking.start_at|date:"d M Y" }}</p>
+  <form method="post" class="surface p-4" novalidate>{% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    <fieldset class="mb-3"><legend class="form-label">Your rating</legend>
+      <div class="star-input" role="radiogroup">
+        {% for i in "54321" %}<input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if form.rating.value|stringformat:"s" == i %}checked{% endif %} required><label for="star{{ i }}" title="{{ i }} star{{ i|pluralize }}"><i class="bi bi-star-fill"></i><span class="visually-hidden">{{ i }} star{{ i|pluralize }}</span></label>{% endfor %}
+      </div>{% for e in form.rating.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</fieldset>
+    {% include "partials/_field.html" with field=form.comment %}
+    <button class="btn btn-primary" type="submit">{% if review %}Save changes{% else %}Post review{% endif %}</button>
+  </form>
+</div>
+{% endblock %}

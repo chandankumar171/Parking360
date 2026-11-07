@@ -1,0 +1,27 @@
+{% extends "layouts/public.html" %}
+{% load ps_extras %}
+{% block title %}{{ profile.business_name|default:owner.full_name }} on ParkShare{% endblock %}
+{% block page %}
+<div class="container py-4 py-lg-5">
+  <div class="surface p-4 p-md-5 mb-4"><div class="d-flex flex-wrap gap-4 align-items-center">
+    <span class="avatar avatar-lg" style="width:6rem;height:6rem;font-size:2rem">{{ owner.initials }}</span>
+    <div class="flex-grow-1"><h1 class="h2 mb-1">{{ profile.business_name|default:owner.full_name }}</h1>
+      <div class="text-muted">On ParkShare since {{ owner.date_joined|date:"F Y" }}</div>
+      {% if profile.address %}<div class="text-muted"><i class="bi bi-geo-alt"></i> {{ profile.address }}</div>{% endif %}
+      {% if verified_count %}<div class="mt-2">{% include "partials/_verified_badge.html" %} <span class="small text-muted">{{ verified_count }} verified parking{{ verified_count|pluralize }}</span></div>{% endif %}</div>
+    <div class="d-flex gap-4 text-center"><div><div class="font-display fs-3 fw-bold">{% if summary.n %}{{ summary.avg|floatformat:1 }}{% else %}-{% endif %}</div><div class="small text-muted">Rating</div></div>
+      <div><div class="font-display fs-3 fw-bold">{{ summary.n }}</div><div class="small text-muted">Reviews</div></div>
+      <div><div class="font-display fs-3 fw-bold">{{ completed }}</div><div class="small text-muted">Stays hosted</div></div></div></div>
+    {% if profile.about %}<p class="mt-4 mb-0">{{ profile.about|linebreaksbr }}</p>{% endif %}</div>
+
+  <h2 class="h4 mb-3">Parkings</h2>
+  <div class="row g-3 mb-5">{% for p in parkings %}<div class="col-md-6 col-lg-4">{% include "partials/_parking_card.html" %}</div>{% empty %}<div class="col-12"><div class="surface empty"><i class="bi bi-p-square"></i>No live parkings right now.</div></div>{% endfor %}</div>
+
+  <h2 class="h4 mb-3">Reviews</h2>
+  <div class="surface p-4">
+    {% if summary.n %}{% include "reviews/_summary.html" with value=summary.avg count=summary.n %}<hr>{% endif %}
+    {% include "reviews/_list.html" with items=page show_parking=True %}
+    {% include "partials/_pagination_qs.html" %}
+  </div>
+</div>
+{% endblock %}

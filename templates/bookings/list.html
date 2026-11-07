@@ -1,0 +1,16 @@
+{% extends "layouts/driver.html" %}
+{% load ps_extras static %}
+{% block page_title %}My bookings{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">My bookings</h1>
+<ul class="nav seg mb-4">{% for key, label in tabs %}<li class="nav-item"><a class="nav-link {% if key == tab %}active{% endif %}" href="?tab={{ key }}">{{ label }}</a></li>{% endfor %}</ul>
+<div class="d-grid gap-3">
+  {% for b in bookings %}
+  <a class="surface p-3 d-flex flex-wrap gap-3 align-items-center text-decoration-none text-reset booking-row" href="{% url 'bookings:detail' b.pk %}">
+    <div class="flex-grow-1"><div class="fw-semibold">{{ b.parking.name }}</div>
+      <div class="small text-muted">{{ b.start_at|date:"D d M, h:i A" }} to {{ b.end_at|date:"h:i A" }} · {{ b.vehicle_number_plate }}</div></div>
+    <div class="text-end"><div class="fw-semibold">{{ b.base_amount|rupees }}</div><span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis">{{ b.get_status_display }}</span></div>
+  </a>
+  {% empty %}<div class="surface empty"><i class="bi bi-calendar2-check"></i><h2 class="h5 text-body">Nothing here yet</h2><a class="btn btn-primary mt-2" href="{% url 'parkings:search' %}">Find parking</a></div>{% endfor %}
+</div>
+{% endblock %}

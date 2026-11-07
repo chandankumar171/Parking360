@@ -1,0 +1,33 @@
+{% extends "legal/_page.html" %}
+{% block title %}Privacy Policy | ParkShare{% endblock %}
+{% block legal_title %}Privacy Policy{% endblock %}
+{% block legal_body %}
+{# DRAFT: written to match what the platform actually stores. Have it reviewed by a lawyer before you launch. #}
+<h2>What we collect</h2>
+<ul>
+  <li><strong>Account details:</strong> name, email, mobile number, password (stored only as a secure hash), role, and an optional profile photo.</li>
+  <li><strong>Owners:</strong> business name, address, parking listings (address, map link, photos, prices, rules).</li>
+  <li><strong>Drivers:</strong> saved vehicles (number plate, brand and model) and the vehicle details you enter when booking.</li>
+  <li><strong>Bookings and activity:</strong> times, amounts, check-in and checkout records, reviews, refund requests, driver points and notifications.</li>
+  <li><strong>Payments:</strong> handled by Razorpay. We keep the payment and refund references and amounts, not your card or UPI credentials.</li>
+  <li><strong>Location:</strong> if you tap "Near me" your browser shares your position with the search page to sort results. We do not store it.</li>
+</ul>
+<h2>How we use it</h2>
+<p>To run bookings and payments, let owners verify arrivals, calculate overtime and refunds, show owners the points and history of drivers who book with them, prevent fraud and abuse, send account and service messages (such as password resets), and show owners and the platform team reports.</p>
+<h2>Who sees what</h2>
+<ul>
+  <li>An owner sees the name, mobile number, vehicle details and points of drivers who booked their parking.</li>
+  <li>A driver sees an owner's business name, parking details and public reviews. Reviewer names are shortened (for example "Asha R.").</li>
+  <li>The ParkShare team can see account, booking and payment records to operate and support the service.</li>
+</ul>
+<h2>Service providers</h2>
+<p>We use Razorpay (payments), Cloudinary (photo storage), an email provider (password reset), and hosting and database providers. They process data only to provide those services.</p>
+<h2>Cookies and storage</h2>
+<p>We use a session cookie to keep you signed in and a security (CSRF) cookie to protect forms. Your light or dark theme and sidebar choice are stored in your browser. We do not use advertising cookies.</p>
+<h2>Keeping and deleting data</h2>
+<p>We keep booking and payment records as long as needed for accounting, disputes and legal obligations. You can ask us to correct your details or close your account; records we must keep for those reasons may be retained.</p>
+<h2>Security</h2>
+<p>Connections use HTTPS, passwords are hashed, access is limited by role, and payments are verified with signed requests. No system is perfectly secure, so please use a strong, unique password.</p>
+<h2>Changes</h2>
+<p>If we change this policy we will update the date above.</p>
+{% endblock %}

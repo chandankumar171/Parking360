@@ -1,0 +1,14 @@
+{% extends "layouts/panel.html" %}
+{% block page_title %}Parkings{% endblock %}
+{% block heading %}All parkings{% endblock %}
+{% block content %}
+<form class="mb-3" method="get" role="search"><input type="hidden" name="status" value="{{ active_status }}"><div class="input-group" style="max-width:26rem">
+  <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Search name, city or owner" aria-label="Search"><button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button></div></form>
+{% include "partials/_status_tabs.html" %}
+<div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>Parking</th><th>Owner</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+  <tbody>{% for p in page %}{% include "superadmin/_parking_row.html" %}{% empty %}
+  <tr><td colspan="5"><div class="empty"><i class="bi bi-p-square"></i>No parkings found.</div></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% include "partials/_pagination.html" %}
+{% endblock %}

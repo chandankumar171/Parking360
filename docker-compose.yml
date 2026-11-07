@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-parkshare}
+      MYSQL_USER: ${DB_USER:-parkshare}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-parkshare}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DB_HOST: db
+      DB_PORT: "3306"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Runs the periodic jobs: expire unpaid holds, mark no-shows, auto-complete stays, reconcile payments.
+  # Run exactly one of these. It needs no cron on the host.
+  scheduler:
+    build: .
+    command: ["python", "manage.py", "run_scheduler"]
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DB_HOST: db
+      DB_PORT: "3306"
+    healthcheck:
+      disable: true
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  dbdata:

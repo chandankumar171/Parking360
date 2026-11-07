@@ -1,0 +1,5 @@
+{% load ps_extras %}
+<div class="row g-3 align-items-center">
+  <div class="col-auto text-center"><div class="font-display" style="font-size:2.6rem;font-weight:800;line-height:1">{{ value|floatformat:1 }}</div>{% include "partials/_stars.html" %}<div class="small text-muted">{{ count }} review{{ count|pluralize }}</div></div>
+  <div class="col">{% for star, n, pct in distribution %}<div class="d-flex align-items-center gap-2 small"><span style="width:1.2rem">{{ star }}★</span><div class="progress flex-grow-1" style="height:8px"><div class="progress-bar" style="width:{{ pct }}%;background:#f5a623"></div></div><span class="text-muted" style="width:2rem;text-align:right">{{ n }}</span></div>{% endfor %}</div>
+</div>

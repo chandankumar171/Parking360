@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found | ParkShare{% endblock %}
+{% block body %}
+<div class="error-page"><div>
+  <div class="code">404</div>
+  <h1 class="h3 mt-2">This page isn't here</h1>
+  <p class="text-muted mx-auto" style="max-width:34rem">The link may be old or mistyped. Head back and try again.</p>
+  <a class="btn btn-primary" href="{% url 'core:landing' %}">Back to ParkShare</a>
+</div></div>
+{% endblock %}

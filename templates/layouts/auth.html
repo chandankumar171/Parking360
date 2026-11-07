@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="auth-wrap">
+  <aside class="auth-aside">
+    <a class="brand text-white" href="{% url 'core:landing' %}">{% include "partials/_brand.html" %}</a>
+    <div>
+      <h2 class="mb-4">{% block aside_title %}Parking that is ready when you are{% endblock %}</h2>
+      <ul>
+        <li><i class="bi bi-check2-circle"></i>Pay online, park with a 6-character code</li>
+        <li><i class="bi bi-check2-circle"></i>Owners set prices, hours and overtime rates</li>
+        <li><i class="bi bi-check2-circle"></i>Ratings and points keep both sides honest</li>
+      </ul>
+    </div>
+    <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  </aside>
+  <main class="auth-main">
+    <div class="auth-card">
+      <a class="brand d-lg-none mb-4" href="{% url 'core:landing' %}">{% include "partials/_brand.html" %}</a>
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}

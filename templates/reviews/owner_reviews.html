@@ -1,0 +1,25 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Reviews{% endblock %}
+{% block heading %}Reviews{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="stat"><div class="label">Average rating</div><div class="value">{% if summary.n %}{{ summary.avg|floatformat:1 }}{% else %}-{% endif %}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="stat"><div class="label">Reviews</div><div class="value">{{ summary.n }}</div></div></div>
+  <div class="col-6 col-lg-3"><a class="stat d-block text-decoration-none text-reset" href="?pending=1"><div class="label">Waiting for your reply</div><div class="value">{{ summary.waiting }}</div></a></div>
+</div>
+<form class="row g-2 mb-3" method="get"><div class="col-md-4"><select class="form-select" name="parking" aria-label="Parking"><option value="">All parkings</option>{% for p in my_parkings %}<option value="{{ p.pk }}" {% if parking == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+  <div class="col-md-4 d-flex align-items-center"><div class="form-check"><input class="form-check-input" type="checkbox" name="pending" value="1" id="pend" {% if pending %}checked{% endif %}><label class="form-check-label" for="pend">Only unanswered</label></div></div>
+  <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filter</button></div></form>
+<div class="d-grid gap-3">
+  {% for r in page %}
+  <article class="surface p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between gap-2"><div>{% include "partials/_stars.html" with value=r.rating %} <strong class="ms-1">{{ r.driver|person_name }}</strong> <span class="text-muted small">· {{ r.parking.name }}</span></div><span class="small text-muted">{{ r.created_at|date:"d M Y" }}</span></div>
+    {% if r.comment %}<p class="mt-2 mb-2">{{ r.comment }}</p>{% else %}<p class="mt-2 mb-2 text-muted">No written comment.</p>{% endif %}
+    {% if r.owner_reply %}<div class="reply-box"><div class="small fw-semibold"><i class="bi bi-reply"></i> Your reply</div><div class="small">{{ r.owner_reply }}</div></div>
+    {% else %}<form method="post" action="{% url 'owner:review_reply' r.pk %}" class="d-flex gap-2">{% csrf_token %}<input class="form-control" name="text" maxlength="600" required minlength="2" placeholder="Reply publicly (you can reply once)" aria-label="Reply"><button class="btn btn-outline-primary" type="submit">Reply</button></form>{% endif %}
+  </article>
+  {% empty %}<div class="surface empty"><i class="bi bi-star"></i>No reviews yet. They appear after drivers complete a stay.</div>{% endfor %}
+</div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

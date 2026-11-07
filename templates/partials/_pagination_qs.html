@@ -1,0 +1,8 @@
+{% load ps_extras %}
+{% if page.paginator.num_pages > 1 %}
+<nav class="mt-4" aria-label="Pagination"><ul class="pagination justify-content-center mb-0">
+  {% if page.has_previous %}<li class="page-item"><a class="page-link" href="{% url_with page=page.previous_page_number %}">Previous</a></li>{% endif %}
+  <li class="page-item disabled"><span class="page-link">Page {{ page.number }} of {{ page.paginator.num_pages }}</span></li>
+  {% if page.has_next %}<li class="page-item"><a class="page-link" href="{% url_with page=page.next_page_number %}">Next</a></li>{% endif %}
+</ul></nav>
+{% endif %}

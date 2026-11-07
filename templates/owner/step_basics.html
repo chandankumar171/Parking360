@@ -1,0 +1,29 @@
+{% extends "owner/step_layout.html" %}
+{% block step_content %}
+<form method="post" class="surface p-4" novalidate>
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  <h3 class="h5 mb-3">About the parking</h3>
+  {% include "partials/_field.html" with field=form.name %}
+  {% include "partials/_field.html" with field=form.description %}
+  <h3 class="h5 mt-4 mb-3">Address</h3>
+  {% include "partials/_field.html" with field=form.address_line %}
+  <div class="row g-3">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.area %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.city %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.state %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.pincode %}</div>
+  </div>
+  <h3 class="h5 mt-4 mb-3">Location</h3>
+  {% include "partials/_field.html" with field=form.google_maps_url %}
+  <div class="row g-3">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.latitude %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.longitude %}</div>
+  </div>
+  {% if parking.google_maps_url %}<p class="small"><a href="{{ parking.google_maps_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Check the link in Google Maps</a></p>{% endif %}
+  {% include "partials/_field.html" with field=form.contact_phone %}
+  {% if creating %}
+  <div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit">Create draft and continue <i class="bi bi-arrow-right"></i></button></div>
+  {% else %}{% include "partials/_step_nav.html" %}{% endif %}
+</form>
+{% endblock %}

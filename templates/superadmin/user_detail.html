@@ -1,0 +1,52 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}{{ u.full_name }}{% endblock %}
+{% block heading %}{% if u.role == "OWNER" %}Owner{% else %}Driver{% endif %} profile{% endblock %}
+{% block content %}
+<a class="small" href="{% if u.role == 'OWNER' %}{% url 'sadmin:owners' %}{% else %}{% url 'sadmin:drivers' %}{% endif %}"><i class="bi bi-arrow-left"></i> Back to list</a>
+<div class="row g-4 mt-1">
+  <div class="col-lg-4">
+    <div class="surface p-4 text-center">
+      <span class="avatar avatar-lg mb-3">{{ u.initials }}</span>
+      <h2 class="h5 mb-0">{% if u.role == "OWNER" %}{{ u.owner_profile.business_name|default:u.full_name }}{% else %}{{ u.full_name }}{% endif %}</h2>
+      <div class="text-muted small">{{ u.full_name }} · {{ u.email }}</div><div class="text-muted small">{{ u.phone|default:"No mobile number" }} · joined {{ u.date_joined|date:"d M Y" }}</div>
+      <div class="mt-2"><span class="pill pill-teal">{{ u.get_role_display }}</span> {% if u.is_active %}<span class="pill bg-success-subtle text-success-emphasis">Active</span>{% else %}<span class="pill bg-danger-subtle text-danger-emphasis">Disabled</span>{% endif %}</div>
+      {% if u.role == "DRIVER" %}<hr><div class="small text-muted">Reliability points</div><div class="font-display fs-2 fw-bold">{{ u.points }}</div><span class="pill bg-{{ u.points_tier.css }}-subtle text-{{ u.points_tier.css }}-emphasis">{{ u.points_tier.label }}</span>{% endif %}
+      {% if u.role == "OWNER" %}<hr><div class="money-line"><span>Net earned</span><span>{{ earned|rupees }}</span></div><div class="money-line"><span>Paid out</span><span>{{ paid_out|rupees }}</span></div><div class="money-line total"><span>Owed now</span><span>{{ balance|rupees }}</span></div>{% if rating_n %}<div class="small text-muted mt-2">{{ rating_avg }} ★ from {{ rating_n }} review{{ rating_n|pluralize }}</div>{% endif %}{% endif %}
+    </div>
+    <div class="surface p-4 mt-3">
+      <h3 class="h6">Account access</h3>
+      <p class="small text-muted">{{ active_bookings }} active booking{{ active_bookings|pluralize }}. {% if u.is_active %}Disabling blocks login immediately{% if u.role == "OWNER" %} and suspends this owner's live parkings{% endif %}.{% else %}This account cannot log in.{% endif %}</p>
+      <form method="post" action="{% url 'sadmin:user_toggle' u.pk %}" data-confirm="{% if u.is_active %}Disable {{ u.full_name }}? They will be logged out and unable to sign in.{% else %}Let {{ u.full_name }} log in again?{% endif %}">{% csrf_token %}
+        <input class="form-control mb-2" name="reason" maxlength="200" placeholder="Reason (kept in the audit log)" aria-label="Reason">
+        <button class="btn {% if u.is_active %}btn-outline-danger{% else %}btn-primary{% endif %} w-100" type="submit">{% if u.is_active %}Disable account{% else %}Enable account{% endif %}</button></form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    {% if u.role == "OWNER" %}
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-3">Parkings</h2>
+      {% for p in parkings %}<div class="money-line"><span><a href="{% url 'sadmin:parking_detail' p.pk %}">{{ p.name }}</a><div class="small text-muted">{{ p.area }}, {{ p.city }}</div></span><span>{% include "partials/_status_pill.html" with parking=p %}</span></div>
+      {% empty %}<p class="text-muted mb-0">No parkings yet.</p>{% endfor %}</div>
+    {% else %}
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Bookings</div><div class="value">{{ stats.total }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Completed</div><div class="value">{{ stats.completed }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Cancelled</div><div class="value">{{ stats.cancelled }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">No-shows</div><div class="value">{{ stats.no_shows }}</div></div></div>
+    </div>
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-3">Saved vehicles</h2>
+      {% for v in vehicles %}<div class="money-line"><span>{{ v.plate_number }}</span><span class="text-muted small">{{ v.brand }} {{ v.model }} · {{ v.get_category_display }}</span></div>{% empty %}<p class="text-muted mb-0">None.</p>{% endfor %}</div>
+    {% endif %}
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-3">Recent bookings</h2>
+      {% for b in recent %}<a class="money-line text-decoration-none text-reset" href="{% url 'sadmin:booking_detail' b.pk %}"><span>#{{ b.pk }} · {{ b.parking.name }}{% if u.role == "OWNER" %} · {{ b.driver.full_name }}{% endif %}<div class="small text-muted">{{ b.start_at|date:"d M Y, h:i A" }} · {{ b.vehicle_number_plate }}</div></span><span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis">{{ b.get_status_display }}</span></a>
+      {% empty %}<p class="text-muted mb-0">No bookings yet.</p>{% endfor %}</div>
+    {% if u.role == "DRIVER" %}
+    <div class="row g-4">
+      <div class="col-md-6"><div class="surface p-4 h-100"><h2 class="h5 mb-3">Points history</h2>
+        {% for l in point_logs %}<div class="money-line"><span>{{ l.get_reason_display }}<div class="small text-muted">{{ l.created_at|date:"d M Y" }}</div></span><span class="{% if l.delta > 0 %}text-success{% elif l.delta < 0 %}text-danger{% endif %}">{% if l.delta > 0 %}+{% endif %}{{ l.delta }}</span></div>{% empty %}<p class="text-muted mb-0">No changes yet.</p>{% endfor %}</div></div>
+      <div class="col-md-6"><div class="surface p-4 h-100"><h2 class="h5 mb-3">Owner verdicts</h2>
+        {% for x in verdicts %}<div class="py-1 small">{% if x.satisfied %}<i class="bi bi-hand-thumbs-up-fill text-success"></i>{% else %}<i class="bi bi-hand-thumbs-down-fill text-danger"></i>{% endif %} {{ x.booking.parking.name }}{% if x.comment %}: {{ x.comment }}{% endif %}</div>{% empty %}<p class="text-muted mb-0">None yet.</p>{% endfor %}</div></div>
+    </div>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "layouts/public.html" %}
+{% load ps_extras static widget_tweaks %}
+{% block title %}{{ parking.name }}, {{ parking.area }}, {{ parking.city }} | ParkShare{% endblock %}
+{% block meta_description %}Book parking at {{ parking.name }} in {{ parking.area }}, {{ parking.city }}{% if parking.starting_price %} from {{ parking.starting_price|rupees }}{% endif %}. Pay online and check in with a code.{% endblock %}
+{% block og_title %}{{ parking.name }} | ParkShare{% endblock %}
+{% block page %}
+<div class="container py-4">
+  <nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="{% url 'parkings:search' %}">Find parking</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'parkings:search' %}?q={{ parking.city|urlencode }}">{{ parking.city }}</a></li><li class="breadcrumb-item active" aria-current="page">{{ parking.name }}</li></ol></nav>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <h1 class="h2 mb-1">{{ parking.name }}</h1>
+      <div class="text-muted"><i class="bi bi-geo-alt"></i> {{ parking.full_address }}</div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+        {% if parking.is_verified_badge %}{% include "partials/_verified_badge.html" %}{% endif %}
+        {% if open_now %}<span class="pill bg-success-subtle text-success-emphasis">Open now</span>{% else %}<span class="pill bg-secondary-subtle text-secondary-emphasis">Closed now</span>{% endif %}
+        {% if parking.review_count %}<span class="small">{% include "partials/_stars.html" with value=parking.avg_rating %} <strong>{{ parking.avg_rating|floatformat:1 }}</strong> <span class="text-muted">({{ parking.review_count }} review{{ parking.review_count|pluralize }})</span></span>{% endif %}
+      </div>
+    </div>
+    <a class="btn btn-outline-primary" href="{{ parking.google_maps_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-map"></i> Open in Google Maps</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      {% if photos %}
+      <div id="gallery" class="carousel slide gallery mb-4" data-bs-ride="false" aria-label="Photos of {{ parking.name }}">
+        <div class="carousel-inner">{% for ph in photos %}<div class="carousel-item {% if forloop.first %}active{% endif %}"><img src="{{ ph.image|thumb:'1100x700' }}" class="d-block w-100" alt="{{ parking.name }}, photo {{ forloop.counter }}" {% if not forloop.first %}loading="lazy"{% endif %}></div>{% endfor %}</div>
+        {% if photos|length > 1 %}<button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>
+        <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>{% endif %}
+      </div>{% endif %}
+
+      <section class="surface p-4 mb-4"><h2 class="h5">About this parking</h2><p class="mb-3">{{ parking.description|linebreaksbr }}</p>
+        {% if parking.amenity_list %}<div class="d-flex flex-wrap gap-2">{% for icon, label in parking.amenity_list %}<span class="pill pill-teal"><i class="bi {{ icon }}"></i>{{ label }}</span>{% endfor %}</div>{% endif %}
+        <dl class="kv mt-3 mb-0"><dt>Hours</dt><dd>{{ parking.opening_hours_text }}</dd>
+          <dt>Cancellation</dt><dd>{% if parking.allow_cancellation %}Free to request until {{ parking.cancel_window_minutes|duration }} before start{% if parking.cancellation_charge_percent %} ({{ parking.cancellation_charge_percent|floatformat:"-2" }}% is kept){% endif %}{% else %}Bookings here are not refundable{% endif %}</dd>
+          <dt>Arrival</dt><dd>Check in within {{ parking.grace_minutes }} minutes of your start time, or the booking is marked as a no-show.</dd></dl>
+        {% if parking.rules_text %}<h3 class="h6 mt-3">House rules</h3><p class="text-muted mb-0">{{ parking.rules_text|linebreaksbr }}</p>{% endif %}</section>
+
+      <section class="surface p-4 mb-4"><h2 class="h5 mb-3">Prices and availability</h2>
+        <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Vehicle</th><th>Price</th><th>Right now</th></tr></thead><tbody>
+          {% for r in type_rows %}<tr><td class="fw-semibold">{{ r.type.display_name }}<div class="small text-muted fw-normal">{{ r.type.min_slots }} to {{ r.type.max_slots }} slots</div></td>
+            <td>{{ r.type.price_per_slot|rupees }}<div class="small text-muted">per {{ r.type.slot_minutes|duration }}</div></td>
+            <td>{% if r.left == 0 %}<span class="pill bg-danger-subtle text-danger-emphasis">Booked / full</span>{% else %}<span class="pill bg-success-subtle text-success-emphasis">{{ r.left }} of {{ r.type.capacity }} free</span>{% endif %}</td></tr>{% endfor %}
+        </tbody></table></div>
+        <h3 class="h6 mt-4"><i class="bi bi-stopwatch me-1"></i>If you stay longer than booked</h3>
+        <ul class="mb-0 text-muted">{% for r in type_rows %}<li><strong class="text-body">{{ r.type.display_name }}:</strong> {{ r.type.overtime_text }}, rounded up to the next block. Paid online at checkout.</li>{% endfor %}</ul></section>
+
+      <section class="surface p-4 mb-4"><h2 class="h5 mb-3">Hosted by</h2>
+        <div class="d-flex align-items-center gap-3"><span class="avatar avatar-lg">{{ parking.owner.initials }}</span>
+          <div><div class="fw-semibold">{{ parking.owner.owner_profile.business_name|default:parking.owner.full_name }}</div><div class="small text-muted">On ParkShare since {{ parking.owner.date_joined|date:"F Y" }}</div>
+          {% if parking.owner.owner_profile.is_public %}<a class="small" href="{% url 'reviews:owner_profile' parking.owner.pk %}">View owner profile and all reviews</a>{% endif %}</div></div></section>
+
+      <section class="surface p-4"><h2 class="h5 mb-2">Reviews</h2>
+        {% if parking.review_count %}
+        {% include "reviews/_summary.html" with value=parking.avg_rating count=parking.review_count %}
+        <div class="mt-3">{% include "reviews/_list.html" with items=reviews %}</div>
+        {% if parking.review_count > reviews|length %}<a class="small" href="{% url 'reviews:owner_profile' parking.owner.pk %}">See all reviews from this owner</a>{% endif %}
+        {% else %}<p class="text-muted mb-0">No reviews yet. Drivers can rate this parking after a completed stay.</p>{% endif %}</section>
+    </div>
+
+    <div class="col-lg-5"><div class="booking-card surface p-4">
+      <div class="d-flex justify-content-between align-items-baseline mb-3"><h2 class="h5 mb-0">Book a bay</h2>{% if parking.starting_price %}<span class="text-muted small">from <strong class="text-body">{{ parking.starting_price|rupees }}</strong> per slot</span>{% endif %}</div>
+      {% if not user.is_authenticated %}
+        <p class="text-muted">Log in or create a free driver account to reserve a bay.</p>
+        <div class="d-grid gap-2"><a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Log in to book</a>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:signup' %}?role=DRIVER">Create driver account</a></div>
+      {% elif not can_book %}
+        <div class="alert alert-info mb-0">You are signed in as {{ user.get_role_display|lower }}. Only driver accounts can book parking.</div>
+      {% else %}
+      <form method="post" id="booking-form" novalidate data-quote-url="{% url 'parkings:quote' parking.pk %}">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+        {% if saved_vehicles %}<div class="mb-3"><label class="form-label" for="saved-vehicle">Use a saved vehicle</label>
+          <select class="form-select" id="saved-vehicle"><option value="">Choose...</option>{% for v in saved_vehicles %}<option value="{{ v.pk }}" data-plate="{{ v.plate_number }}" data-brand="{{ v.brand }} {{ v.model }}" data-category="{{ v.category }}">{{ v.plate_number }} · {{ v.brand }} {{ v.model }}</option>{% endfor %}</select></div>{% endif %}
+        <div class="mb-3"><label class="form-label" for="{{ form.vehicle_type.id_for_label }}">Vehicle type</label>
+          <select class="form-select {% if form.vehicle_type.errors %}is-invalid{% endif %}" name="vehicle_type" id="{{ form.vehicle_type.id_for_label }}">
+            {% for r in type_rows %}<option value="{{ r.type.pk }}" data-category="{{ r.type.category }}" data-min="{{ r.type.min_slots }}" data-max="{{ r.type.max_slots }}" data-slot="{{ r.type.slot_minutes }}" {% if form.vehicle_type.value|stringformat:"s" == r.type.pk|stringformat:"s" %}selected{% endif %}>{{ r.type.display_name }} · {{ r.type.price_per_slot|rupees }} / {{ r.type.slot_minutes|duration }}</option>{% endfor %}</select>
+          {% for e in form.vehicle_type.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        <div class="row g-2 mb-3">
+          <div class="col-7"><label class="form-label" for="{{ form.date.id_for_label }}">Date</label>{% render_field form.date class="form-control" min=today max=max_day %}{% for e in form.date.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+          <div class="col-5"><label class="form-label" for="{{ form.time.id_for_label }}">Start time</label>{% render_field form.time class="form-control" %}{% for e in form.time.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        </div>
+        <div class="mb-3"><label class="form-label" for="{{ form.slots.id_for_label }}">Number of slots</label>{% render_field form.slots class="form-control" %}
+          <div class="form-text" id="slot-hint"></div>{% for e in form.slots.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        <div id="quote-box" class="quote-box mb-3" aria-live="polite"><span class="text-muted">Choose a time to see availability and price.</span></div>
+        <hr>
+        <div class="mb-3"><label class="form-label" for="{{ form.vehicle_number_plate.id_for_label }}">Vehicle number plate</label>{% render_field form.vehicle_number_plate class="form-control" %}{% for e in form.vehicle_number_plate.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        <div class="mb-3"><label class="form-label" for="{{ form.vehicle_brand_model.id_for_label }}">Brand and model</label>{% render_field form.vehicle_brand_model class="form-control" %}{% for e in form.vehicle_brand_model.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="terms" id="id_terms" {% if form.terms.value %}checked{% endif %}>
+          <label class="form-check-label small" for="id_terms">I will check in within the grace period, and I understand extra time is charged at the overtime rate shown above.</label>{% for e in form.terms.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        <button class="btn btn-primary btn-lg w-100" type="submit" id="book-btn">Hold this bay and continue</button>
+        <div class="form-text text-center mt-2">The bay is held for 10 minutes while you pay.</div>
+      </form>{% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/booking.js' %}"></script>{% endblock %}

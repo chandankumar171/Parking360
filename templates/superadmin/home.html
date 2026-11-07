@@ -1,0 +1,27 @@
+{% extends "layouts/panel.html" %}
+{% load static %}
+{% block page_title %}Superadmin dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<div class="mb-4"><h2 class="h3 mb-1">Platform overview</h2>
+  <p class="text-muted mb-0">Verification is <strong>{% if verification_required %}required{% else %}not required{% endif %}</strong> for new parkings. <a href="{% url 'core:platform_settings' %}">Change</a></p></div>
+{% if pending %}<div class="alert alert-warning d-flex justify-content-between align-items-center">
+  <span>{{ pending }} parking{{ pending|pluralize }} waiting for review.</span><a class="btn btn-sm btn-dark" href="{% url 'sadmin:queue' %}">Open queue</a></div>{% endif %}
+
+{% include "dashboard/_filters.html" %}
+
+<div id="dash" class="is-loading" data-overview-url="{% url 'dashboard:admin_overview' %}">
+  <div id="dash-error" class="alert alert-danger" role="alert" hidden>We couldn't load the dashboard. <button class="btn btn-link p-0 align-baseline" type="button" id="dash-retry">Try again</button></div>
+  <div id="kpis" class="row g-3 mb-4">{% for i in "12345678" %}<div class="col-6 col-lg-3"><div class="stat"><div class="skeleton" style="height:.9rem;width:55%"></div><div class="skeleton mt-2" style="height:2rem;width:75%"></div></div></div>{% endfor %}</div>
+  <div class="row g-3">
+    {% include "dashboard/_chart.html" with cid="revenue" title="Gross collected and platform earnings" col="col-lg-8" %}
+    {% include "dashboard/_chart.html" with cid="status" title="Booking status" col="col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="signups" title="New sign-ups" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="refunds" title="Refunds issued" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="cities" title="Bookings by city" col="col-md-6 col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="top_parkings" title="Top parkings (net earnings)" col="col-md-6 col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="top_owners" title="Top owners (net earnings)" col="col-lg-4" %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script><script src="{% static 'js/dashboard.js' %}"></script>{% endblock %}

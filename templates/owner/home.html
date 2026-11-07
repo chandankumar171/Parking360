@@ -1,0 +1,44 @@
+{% extends "layouts/panel.html" %}
+{% load static %}
+{% block page_title %}Owner dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div><h2 class="h3 mb-1">Welcome, {{ user.get_short_name }}</h2><p class="text-muted mb-0">{{ user.owner_profile.business_name|default:"Your business" }}</p></div>
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    <form class="d-flex gap-2" method="post" action="{% url 'owner:verify' %}">{% csrf_token %}
+      <label class="visually-hidden" for="quick-code">Booking code</label>
+      <input class="form-control code-input" style="width:11rem;font-size:1.1rem;letter-spacing:.25em" id="quick-code" name="code" maxlength="6" placeholder="CODE" autocomplete="off" required>
+      <button class="btn btn-primary" type="submit"><i class="bi bi-qr-code-scan"></i> Verify</button></form>
+    <a class="btn btn-outline-primary" href="{% url 'owner:parking_create' %}"><i class="bi bi-plus-lg"></i> Add parking</a>
+  </div>
+</div>
+{% if pending or drafts %}<div class="alert alert-warning py-2">
+  {% if pending %}{{ pending }} parking{{ pending|pluralize }} awaiting verification. {% endif %}{% if drafts %}{{ drafts }} draft or rejected listing{{ drafts|pluralize }} need attention. {% endif %}<a href="{% url 'owner:parking_list' %}">Manage parkings</a></div>{% endif %}
+
+{% include "dashboard/_filters.html" %}
+
+<div id="dash" class="is-loading" data-overview-url="{% url 'dashboard:owner_overview' %}" data-live-url="{% url 'dashboard:owner_live' %}">
+  <div id="dash-error" class="alert alert-danger" role="alert" hidden>We couldn't load the dashboard. <button class="btn btn-link p-0 align-baseline" type="button" id="dash-retry">Try again</button></div>
+  <div id="kpis" class="row g-3 mb-4">{% for i in "123456789" %}<div class="col-6 col-lg-4 col-xl-3"><div class="stat"><div class="skeleton" style="height:.9rem;width:55%"></div><div class="skeleton mt-2" style="height:2rem;width:75%"></div></div></div>{% endfor %}</div>
+  <div class="row g-3 mb-3">
+    {% include "dashboard/_chart.html" with cid="revenue" title="Net earnings" col="col-lg-8" %}
+    {% include "dashboard/_chart.html" with cid="status" title="Booking status" col="col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="bookings" title="Bookings" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="overtime" title="Booking vs overtime revenue" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="occupancy" title="Occupancy" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="peak_hours" title="Peak hours (arrivals)" col="col-lg-6" %}
+    {% include "dashboard/_chart.html" with cid="vehicle" title="Vehicle types" col="col-md-6 col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="parking_revenue" title="Earnings by parking" col="col-md-6 col-lg-4" %}
+    {% include "dashboard/_chart.html" with cid="rating" title="Average rating over time" col="col-lg-4" %}
+  </div>
+  <h2 class="h5 mt-4 mb-3">Right now</h2>
+  <div class="row g-3">
+    <div class="col-lg-6"><section class="surface p-3 h-100"><h3 class="h6">Arriving today</h3><div class="live-list" data-live="upcoming" data-empty="No arrivals left today."></div></section></div>
+    <div class="col-lg-6"><section class="surface p-3 h-100"><h3 class="h6">Overstaying</h3><div class="live-list" data-live="overstaying" data-empty="No vehicle is past its time."></div></section></div>
+    <div class="col-lg-6"><section class="surface p-3 h-100"><h3 class="h6">Refund requests</h3><div class="live-list" data-live="refunds" data-empty="Nothing waiting for a decision."></div></section></div>
+    <div class="col-lg-6"><section class="surface p-3 h-100"><h3 class="h6">Recent bookings</h3><div class="live-list" data-live="recent" data-empty="No bookings yet."></div></section></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script><script src="{% static 'js/dashboard.js' %}"></script>{% endblock %}

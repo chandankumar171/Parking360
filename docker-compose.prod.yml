@@ -1,0 +1,71 @@
+# Track B: one always-free VM (Oracle Cloud) running MySQL + app + scheduler + Caddy (automatic HTTPS).
+#   cp deploy/oracle/env.example .env   (edit it)   then:   docker compose -f docker-compose.prod.yml up -d --build
+services:
+  db:
+    image: mysql:8.0
+    command: >
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M --max-connections=60 --performance-schema=OFF
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-parkshare}
+      MYSQL_USER: ${DB_USER:-parkshare}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes: [dbdata:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_ENGINE: django.db.backends.mysql
+      DB_SSL_MODE: ""
+      ALLOWED_HOSTS: "${DOMAIN},localhost,127.0.0.1"   # 127.0.0.1 lets the container health check pass
+      CSRF_TRUSTED_ORIGINS: "https://${DOMAIN}"
+      SITE_URL: "https://${DOMAIN}"
+      WEB_CONCURRENCY: "${WEB_CONCURRENCY:-3}"
+    expose: ["8000"]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+
+  scheduler:                      # exactly one of these, ever
+    build: .
+    command: ["python", "manage.py", "run_scheduler"]
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_ENGINE: django.db.backends.mysql
+      DB_SSL_MODE: ""
+      ALLOWED_HOSTS: "${DOMAIN},localhost,127.0.0.1"
+    healthcheck: {disable: true}
+    depends_on:
+      web: {condition: service_healthy}
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/oracle/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  caddy_data:
+  caddy_config:

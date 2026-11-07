@@ -1,0 +1,38 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}{{ driver.full_name }}{% endblock %}
+{% block heading %}Driver profile{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="surface p-4 text-center">
+      <span class="avatar avatar-lg mb-3">{{ driver.initials }}</span>
+      <h2 class="h5 mb-0">{{ driver.full_name }}</h2><div class="small text-muted">{{ driver.phone }} · member since {{ since|date:"M Y" }}</div>
+      <hr><div class="small text-muted">Reliability points</div><div class="font-display" style="font-size:2.6rem;font-weight:800;line-height:1.1">{{ driver.points }}</div>
+      <span class="pill bg-{{ driver.points_tier.css }}-subtle text-{{ driver.points_tier.css }}-emphasis">{{ driver.points_tier.label }}</span>
+      {% if satisfied_pct is not None %}<div class="small text-muted mt-3">{{ satisfied_pct }}% of owners were satisfied ({{ v.good }} of {{ v.total }})</div>{% endif %}
+    </div>
+    <div class="surface p-4 mt-3"><h3 class="h6">Vehicles used with you</h3>
+      {% for veh in vehicles %}<div class="money-line"><span>{{ veh.vehicle_number_plate }}<div class="small text-muted">{{ veh.vehicle_brand_model }}</div></span><span class="text-muted small">{{ veh.n }}×</span></div>{% empty %}<p class="text-muted small mb-0">None yet.</p>{% endfor %}</div>
+  </div>
+  <div class="col-lg-8">
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Bookings</div><div class="value">{{ stats.total }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Completed</div><div class="value">{{ stats.completed }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">Cancelled by driver</div><div class="value">{{ stats.cancelled }}</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat"><div class="label">No-shows</div><div class="value">{{ stats.no_shows }}</div></div></div>
+    </div>
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-3">What owners said</h2>
+      {% for x in verdicts %}<div class="py-2 {% if not forloop.last %}border-bottom{% endif %}">
+        <div class="d-flex justify-content-between"><div>{% if x.satisfied %}<i class="bi bi-hand-thumbs-up-fill text-success"></i> Satisfied{% else %}<i class="bi bi-hand-thumbs-down-fill text-danger"></i> Not satisfied{% endif %}
+          <span class="text-muted small">· {{ x.owner.owner_profile.business_name|default:x.owner.full_name }}, {{ x.booking.parking.name }}</span></div><span class="small text-muted">{{ x.created_at|date:"d M Y" }}</span></div>
+        {% if x.comment %}<div class="small mt-1">{{ x.comment }}</div>{% endif %}</div>
+      {% empty %}<p class="text-muted mb-0">No owner feedback yet.</p>{% endfor %}</div>
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-3">Recent bookings with you</h2>
+      {% for b in recent %}<a class="money-line text-decoration-none text-reset" href="{% url 'owner:booking_detail' b.pk %}"><span>{{ b.parking.name }}<div class="small text-muted">{{ b.start_at|date:"d M Y, h:i A" }}</div></span><span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis">{{ b.get_status_display }}</span></a>{% endfor %}</div>
+    <div class="surface p-4"><h2 class="h5 mb-3">Points history</h2>
+      {% for l in point_logs %}<div class="money-line"><span>{{ l.get_reason_display }}<div class="small text-muted">{{ l.created_at|date:"d M Y" }}</div></span><span class="{% if l.delta > 0 %}text-success{% elif l.delta < 0 %}text-danger{% endif %}">{% if l.delta > 0 %}+{% endif %}{{ l.delta }}</span></div>
+      {% empty %}<p class="text-muted mb-0">No point changes yet.</p>{% endfor %}</div>
+  </div>
+</div>
+{% endblock %}

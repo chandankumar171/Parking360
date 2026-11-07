@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% block page_title %}ParkShare{% endblock %} | ParkShare{% endblock %}
+{% block body %}
+<nav class="ps-nav navbar navbar-expand-lg">
+  <div class="container">
+    <a class="brand" href="{{ home_url }}">{% include "partials/_brand.html" %}</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#driverNav" aria-controls="driverNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="driverNav">
+      <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
+        {% for item in nav_items %}
+        <li class="nav-item">
+          {% if item.url_name %}<a class="nav-link{% if item.active %} active text-body{% endif %}" href="{% url item.url_name %}"><i class="bi {{ item.icon }} me-1"></i>{{ item.label }}</a>
+          {% else %}<span class="nav-link disabled" title="Coming soon"><i class="bi {{ item.icon }} me-1"></i>{{ item.label }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="d-flex align-items-center gap-2 py-2 py-lg-0">
+        {% load ps_extras %}{% notification_bell %}
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+        {% include "partials/_user_menu.html" %}
+      </div>
+    </div>
+  </div>
+</nav>
+<main class="container py-4 py-lg-5">{% block content %}{% endblock %}</main>
+{% endblock %}

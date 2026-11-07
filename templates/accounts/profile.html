@@ -1,0 +1,51 @@
+{% extends layout %}
+{% block page_title %}Profile{% endblock %}
+{% block heading %}Profile{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="surface p-4 text-center">
+      {% if user.avatar_url %}<img src="{{ user.avatar_url }}" class="avatar avatar-lg mb-3" alt="">{% else %}<span class="avatar avatar-lg mb-3">{{ user.initials }}</span>{% endif %}
+      <h2 class="h5 mb-0">{{ user.full_name }}</h2>
+      <div class="text-muted small">{{ user.email }}</div>
+      <span class="pill pill-teal mt-2">{{ user.get_role_display }}</span>
+      {% if user.is_driver %}
+      <hr>
+      <div class="label text-muted small">Reliability points</div>
+      <div class="font-display fs-2 fw-bold">{{ user.points }}</div>
+      <span class="pill bg-{{ user.points_tier.css }}-subtle text-{{ user.points_tier.css }}-emphasis">{{ user.points_tier.label }}</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-8">
+    {% if point_logs is not None and user.is_driver %}
+    <div class="surface p-4 mb-4"><h2 class="h5 mb-1">Your points</h2>
+      <p class="small text-muted">Start at 100. Good stays add points; no-shows and unverified checkouts reduce them. Owners see your points and tier. <strong>Excellent</strong> 100+, <strong>Good</strong> 70 to 99, <strong>Fair</strong> 40 to 69, <strong>Risky</strong> under 40.</p>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0"><tbody>
+        {% for l in point_logs %}<tr><td class="small text-nowrap">{{ l.created_at|date:"d M Y" }}</td><td>{{ l.get_reason_display }}<div class="small text-muted">{{ l.note }}</div></td><td class="text-end {% if l.delta > 0 %}text-success{% elif l.delta < 0 %}text-danger{% endif %}">{% if l.delta > 0 %}+{% endif %}{{ l.delta }}</td><td class="text-end text-muted">{{ l.balance_after }}</td></tr>
+        {% empty %}<tr><td class="text-muted">No point changes yet.</td></tr>{% endfor %}</tbody></table></div></div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="surface p-4" novalidate>
+      {% csrf_token %}
+      {% include "partials/_form_errors.html" %}
+      <h2 class="h5 mb-3">Personal details</h2>
+      {% include "partials/_field.html" with field=form.full_name %}
+      {% include "partials/_field.html" with field=form.phone %}
+      {% include "partials/_field.html" with field=form.avatar %}
+      {% if owner_form %}
+      <hr class="my-4">
+      <h2 class="h5 mb-3">Business profile</h2>
+      {% include "partials/_field.html" with field=owner_form.business_name %}
+      {% include "partials/_field.html" with field=owner_form.address %}
+      {% include "partials/_field.html" with field=owner_form.about %}
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="is_public" id="id_is_public" {% if owner_form.is_public.value %}checked{% endif %}>
+        <label class="form-check-label" for="id_is_public">{{ owner_form.is_public.label }}</label>
+      </div>
+      {% endif %}
+      <button class="btn btn-primary" type="submit">Save changes</button>
+      <a class="btn btn-outline-secondary ms-2" href="{% url 'accounts:password_change' %}">Change password</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

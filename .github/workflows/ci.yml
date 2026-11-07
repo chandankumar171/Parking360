@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: parkshare
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0123456789
+      DEBUG: "True"
+      DB_NAME: parkshare
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: 127.0.0.1
+      SUPERADMIN_EMAIL: admin@example.com
+      SUPERADMIN_PASSWORD: CiOnlyPassword!123
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: System packages for mysqlclient
+        run: sudo apt-get update && sudo apt-get install -y pkg-config default-libmysqlclient-dev build-essential
+      - run: pip install -r requirements.txt
+      - name: Migrations are committed and up to date
+        run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py check
+      - name: Test suite
+        run: python manage.py test apps
+      - name: Production configuration check
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DEBUG: "False"
+          SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0123456789
+          ALLOWED_HOSTS: parkshare.example.com
+          CLOUDINARY_CLOUD_NAME: ci
+          CLOUDINARY_API_KEY: ci
+          CLOUDINARY_API_SECRET: ci
+        run: python manage.py check --deploy --fail-level ERROR

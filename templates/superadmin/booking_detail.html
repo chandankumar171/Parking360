@@ -1,0 +1,42 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Booking #{{ b.pk }}{% endblock %}
+{% block heading %}Booking #{{ b.pk }}{% endblock %}
+{% block content %}
+<a class="small" href="{% url 'sadmin:bookings' %}"><i class="bi bi-arrow-left"></i> All bookings</a>
+<div class="d-flex flex-wrap align-items-center gap-2 my-3">
+  <span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis fs-6">{{ b.get_status_display }}</span>
+  {% if b.booking_code %}<span class="font-display fw-bold fs-4" style="letter-spacing:.2em">{{ b.booking_code }}</span>{% endif %}
+</div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Stay</h2>
+      <dl class="kv mb-0"><dt>Parking</dt><dd>{{ b.parking.name }} · <a href="{% url 'sadmin:parking_detail' b.parking_id %}">review</a></dd>
+        <dt>Owner</dt><dd><a href="{% url 'sadmin:user_detail' b.parking.owner_id %}">{{ b.parking.owner.full_name }}</a> ({{ b.parking.owner.email }})</dd>
+        <dt>Driver</dt><dd><a href="{% url 'sadmin:user_detail' b.driver_id %}">{{ b.driver.full_name }}</a> ({{ b.driver.email }})</dd>
+        <dt>Vehicle</dt><dd>{{ b.vehicle_number_plate }} · {{ b.vehicle_brand_model }} · {{ b.get_vehicle_category_display }}</dd>
+        <dt>From</dt><dd>{{ b.start_at|date:"D d M Y, h:i A" }}</dd><dt>Until</dt><dd>{{ b.end_at|date:"D d M Y, h:i A" }} ({{ b.duration_minutes|duration }})</dd>
+        {% if b.checked_in_at %}<dt>Checked in</dt><dd>{{ b.checked_in_at|date:"d M, h:i A" }}</dd>{% endif %}{% if b.checked_out_at %}<dt>Checked out</dt><dd>{{ b.checked_out_at|date:"d M, h:i A" }}</dd>{% endif %}
+        {% if b.overtime_minutes %}<dt>Overtime</dt><dd>{{ b.overtime_minutes }} min · {{ b.overtime_amount|rupees }}</dd>{% endif %}
+        {% if b.cancelled_at %}<dt>Cancelled</dt><dd>{{ b.cancelled_at|date:"d M, h:i A" }}{% if b.cancel_reason %} · {{ b.cancel_reason }}{% endif %}</dd>{% endif %}</dl></div>
+    <div class="surface p-4"><h2 class="h5 mb-3">Money snapshot</h2>
+      <div class="money-line"><span>{{ b.slots }} × {{ b.slot_minutes|duration }} at {{ b.price_per_slot|rupees }}</span><span>{{ b.base_amount|rupees }}</span></div>
+      <div class="money-line text-muted"><span>Platform fee ({{ b.platform_fee_percent|floatformat:"-2" }}%)</span><span>{{ b.platform_fee_amount|rupees }}</span></div>
+      <div class="money-line"><span>Owner share</span><span>{{ b.owner_amount|rupees }}</span></div>
+      <div class="money-line total"><span>Total paid</span><span>{{ b.total_paid|rupees }}</span></div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Payments</h2>
+      {% for p in payments %}<div class="money-line"><span>{{ p.get_kind_display }} · {{ p.get_status_display }}<div class="small text-muted"><code>{{ p.razorpay_order_id }}</code>{% if p.razorpay_payment_id %} · <code>{{ p.razorpay_payment_id }}</code>{% endif %}</div></span><span>{{ p.amount|rupees }}</span></div>
+      {% empty %}<p class="text-muted mb-0">No payment attempts.</p>{% endfor %}</div>
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Refunds</h2>
+      {% for r in refunds %}<div class="money-line"><span>{{ r.get_status_display }}{% if r.reason %} · {{ r.reason }}{% endif %}{% if r.error_message %}<div class="small text-danger">{{ r.error_message }}</div>{% endif %}<div class="small text-muted">{{ r.created_at|date:"d M, h:i A" }}{% if r.razorpay_refund_id %} · <code>{{ r.razorpay_refund_id }}</code>{% endif %}</div></span><span>{{ r.amount|rupees }}</span></div>
+      {% empty %}<p class="text-muted mb-0">None.</p>{% endfor %}</div>
+    <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Owner ledger</h2>
+      {% for e in ledger %}<div class="money-line"><span>{{ e.get_entry_type_display }}<div class="small text-muted">{{ e.note }}</div></span><span>{{ e.amount|rupees }}</span></div>{% empty %}<p class="text-muted mb-0">No entries.</p>{% endfor %}</div>
+    {% if verdict or review %}<div class="surface p-4"><h2 class="h5 mb-3">Feedback</h2>
+      {% if verdict %}<p class="mb-2"><strong>Owner:</strong> {% if verdict.satisfied %}satisfied{% else %}not satisfied{% endif %}{% if verdict.comment %}: {{ verdict.comment }}{% endif %}</p>{% endif %}
+      {% if review %}<p class="mb-0"><strong>Driver:</strong> {{ review.rating }} ★{% if review.comment %}: {{ review.comment }}{% endif %}</p>{% endif %}</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

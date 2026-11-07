@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Access denied | ParkShare{% endblock %}
+{% block body %}
+<div class="error-page"><div>
+  <div class="code">403</div>
+  <h1 class="h3 mt-2">You don't have access to this page</h1>
+  <p class="text-muted mx-auto" style="max-width:34rem">This page belongs to a different account type. If you were signing in repeatedly, wait a minute before trying again.</p>
+  <a class="btn btn-primary" href="{% if user.is_authenticated %}{{ home_url }}{% else %}{% url 'core:landing' %}{% endif %}">Go to my dashboard</a>
+</div></div>
+{% endblock %}

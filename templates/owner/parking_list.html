@@ -1,0 +1,41 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}My parkings{% endblock %}
+{% block heading %}My parkings{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>{% include "partials/_status_tabs.html" %}</div>
+  <a class="btn btn-primary" href="{% url 'owner:parking_create' %}"><i class="bi bi-plus-lg"></i> Add parking</a>
+</div>
+<div class="row g-3">
+  {% for p in parkings %}
+  <div class="col-md-6 col-xl-4">
+    <article class="surface p-card h-100">
+      <div class="p-card-img">
+        {% with cover=p.cover_photo %}{% if cover %}<img src="{{ cover.image|thumb:'640x360' }}" alt="" loading="lazy">{% else %}<div class="p-card-ph"><i class="bi bi-image"></i></div>{% endif %}{% endwith %}
+        <div class="p-card-tags">{% include "partials/_status_pill.html" with parking=p %}{% if p.is_verified_badge %}{% include "partials/_verified_badge.html" %}{% endif %}</div>
+      </div>
+      <div class="p-3">
+        <h2 class="h6 mb-1">{{ p.name }}</h2>
+        <div class="text-muted small mb-2"><i class="bi bi-geo-alt"></i> {{ p.area }}, {{ p.city }}</div>
+        <div class="d-flex flex-wrap gap-1 mb-2">{% for t in p.vehicle_types.all %}<span class="pill pill-teal">{{ t.display_name }} · {{ t.price_per_slot|rupees }}/{{ t.slot_minutes|duration }}</span>{% endfor %}</div>
+        {% if p.status == "REJECTED" and p.rejection_reason %}<div class="small text-danger mb-2">{{ p.rejection_reason }}</div>{% endif %}
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          {% if p.can_edit %}<a class="btn btn-sm btn-outline-primary" href="{% url 'owner:parking_edit_default' p.pk %}">Edit</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'owner:parking_edit' p.pk 'review' %}">{% if p.can_submit %}Review and submit{% else %}Preview{% endif %}</a>
+          <form method="post" action="{% url 'owner:parking_toggle_open' p.pk %}">{% csrf_token %}
+            <button class="btn btn-sm btn-outline-secondary" type="submit">{% if p.is_open %}<i class="bi bi-pause-circle"></i> Close bookings{% else %}<i class="bi bi-play-circle"></i> Reopen{% endif %}</button></form>
+          {% else %}<span class="small text-muted">Suspended. Contact support.</span>{% endif %}
+          <form method="post" action="{% url 'owner:parking_delete' p.pk %}" class="ms-auto" data-confirm="Delete {{ p.name }} permanently? This cannot be undone.">{% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete {{ p.name }}"><i class="bi bi-trash"></i></button></form>
+        </div>
+      </div>
+    </article>
+  </div>
+  {% empty %}
+  <div class="col-12"><div class="surface empty"><i class="bi bi-p-square"></i>
+    <h2 class="h5 text-body">{% if active_status %}No parkings with this status{% else %}You have not listed a parking yet{% endif %}</h2>
+    <a class="btn btn-primary mt-2" href="{% url 'owner:parking_create' %}">Add your first parking</a></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

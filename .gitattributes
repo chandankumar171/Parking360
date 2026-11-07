@@ -1,0 +1,4 @@
+# Shell scripts must keep Unix line endings or Docker cannot run them (a Windows problem).
+*.sh text eol=lf
+*.py text eol=lf
+Dockerfile text eol=lf

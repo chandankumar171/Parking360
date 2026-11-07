@@ -1,0 +1,27 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Refund requests{% endblock %}
+{% block heading %}Refund requests{% endblock %}
+{% block content %}
+<ul class="nav seg mb-4 flex-wrap">{% for key, label, n in tabs %}<li class="nav-item"><a class="nav-link {% if key == tab %}active{% endif %}" href="?tab={{ key }}">{{ label }} <span class="opacity-75">{{ n }}</span></a></li>{% endfor %}</ul>
+<div class="d-grid gap-3">
+  {% for r in page %}
+  <div class="surface p-3">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div><a class="fw-semibold" href="{% url 'owner:booking_detail' r.booking.pk %}">{{ r.booking.parking.name }} · {{ r.booking.vehicle_number_plate }}</a>
+        <div class="small text-muted">{{ r.booking.driver.full_name }} · {{ r.booking.start_at|date:"d M, h:i A" }} · requested {{ r.created_at|date:"d M, h:i A" }}{% if r.initiated_by_owner %} · cancelled by you{% endif %}</div>
+        {% if r.reason %}<div class="small mt-1">"{{ r.reason }}"</div>{% endif %}
+        {% if r.status == "FAILED" and r.error_message %}<div class="small text-danger mt-1">{{ r.error_message }}</div>{% endif %}
+        {% if r.status == "REJECTED" %}<div class="small text-muted mt-1">Declined: {{ r.rejection_reason }}</div>{% endif %}</div>
+      <div class="text-end"><div class="fw-bold">{{ r.amount|rupees }}</div><span class="pill bg-secondary-subtle text-secondary-emphasis">{{ r.get_status_display }}</span></div>
+    </div>
+    {% if r.status == "REQUESTED" or r.status == "FAILED" %}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <form method="post" action="{% url 'owner:refund_approve' r.pk %}" data-confirm="{% if r.status == 'FAILED' %}Retry{% else %}Approve{% endif %} the {{ r.amount|rupees }} refund through Razorpay?">{% csrf_token %}<button class="btn btn-sm btn-primary" type="submit">{% if r.status == "FAILED" %}Retry refund{% else %}Approve and refund{% endif %}</button></form>
+      {% if r.status == "REQUESTED" %}<form method="post" action="{% url 'owner:refund_reject' r.pk %}" class="d-flex gap-2 flex-grow-1">{% csrf_token %}<input class="form-control form-control-sm" name="reason" placeholder="Reason for declining" required minlength="3" aria-label="Reason for declining"><button class="btn btn-sm btn-outline-danger" type="submit">Decline</button></form>{% endif %}
+    </div>{% endif %}
+  </div>
+  {% empty %}<div class="surface empty"><i class="bi bi-arrow-counterclockwise"></i>Nothing here.</div>{% endfor %}
+</div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

@@ -1,0 +1,22 @@
+<div class="filters">
+  <div class="mb-3"><label class="form-label" for="f-vehicle">Vehicle type</label>
+    <select class="form-select" id="f-vehicle" name="vehicle">{% for v, l in form.fields.vehicle.choices %}<option value="{{ v }}" {% if params.vehicle == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="row g-2 mb-3"><div class="col-6"><label class="form-label" for="f-min">Min ₹ / slot</label><input class="form-control" id="f-min" type="number" min="0" name="min_price" value="{{ params.min_price|default_if_none:'' }}"></div>
+    <div class="col-6"><label class="form-label" for="f-max">Max ₹ / slot</label><input class="form-control" id="f-max" type="number" min="0" name="max_price" value="{{ params.max_price|default_if_none:'' }}"></div></div>
+  <fieldset class="mb-3"><legend class="form-label">Available for</legend>
+    <input class="form-control mb-2" type="date" name="date" min="{{ today }}" value="{{ params.date|date:'Y-m-d' }}" aria-label="Date">
+    <div class="row g-2"><div class="col-6"><input class="form-control" type="time" name="start" value="{{ params.start|time:'H:i' }}" aria-label="Start time"></div>
+      <div class="col-6"><select class="form-select" name="hours" aria-label="Duration">{% for v, l in hours %}<option value="{{ v }}" {% if params.hours == v or not params.hours and v == "2" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+    <div class="form-text">Pick a date and time to see only parkings with a free bay.</div></fieldset>
+  <fieldset class="mb-3"><legend class="form-label">Features</legend>
+    {% for f, l, i in amenity_options %}<div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="{{ f }}" id="a-{{ f }}" {% if f in selected_amenities %}checked{% endif %}><label class="form-check-label" for="a-{{ f }}"><i class="bi {{ i }} me-1 text-muted"></i>{{ l }}</label></div>{% endfor %}</fieldset>
+  <fieldset class="mb-3"><legend class="form-label">Good to know</legend>
+    <div class="form-check"><input class="form-check-input" type="checkbox" name="open_now" id="o-open" {% if params.open_now %}checked{% endif %}><label class="form-check-label" for="o-open">Open now</label></div>
+    <div class="form-check"><input class="form-check-input" type="checkbox" name="is_24x7" id="o-247" {% if params.is_24x7 %}checked{% endif %}><label class="form-check-label" for="o-247">Open 24 hours</label></div>
+    <div class="form-check"><input class="form-check-input" type="checkbox" name="cancellable" id="o-can" {% if params.cancellable %}checked{% endif %}><label class="form-check-label" for="o-can">Free cancellation option</label></div>
+    <div class="form-check"><input class="form-check-input" type="checkbox" name="verified" id="o-ver" {% if params.verified %}checked{% endif %}><label class="form-check-label" for="o-ver">Verified only</label></div></fieldset>
+  <div class="mb-3"><label class="form-label" for="f-rate">Minimum rating</label>
+    <select class="form-select" id="f-rate" name="min_rating">{% for v, l in form.fields.min_rating.choices %}<option value="{{ v }}" {% if params.min_rating == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="d-grid gap-2"><button class="btn btn-primary" type="submit">Apply filters</button>
+    <a class="btn btn-outline-secondary" href="{% url 'parkings:search' %}{% if params.q %}?q={{ params.q|urlencode }}{% endif %}">Clear filters</a></div>
+</div>

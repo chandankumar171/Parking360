@@ -1,0 +1,9 @@
+<ol class="stepper" aria-label="Progress">
+  {% for s in steps %}
+  <li class="{% if s.current %}current{% elif s.done %}done{% endif %}">
+    {% if parking and parking.pk %}<a href="{% url 'owner:parking_edit' parking.pk s.key %}" {% if s.current %}aria-current="step"{% endif %}>
+      <span class="dot">{% if s.done %}<i class="bi bi-check-lg"></i>{% else %}{{ s.number }}{% endif %}</span><span class="lbl">{{ s.label }}</span></a>
+    {% else %}<span class="nolink"><span class="dot">{{ s.number }}</span><span class="lbl">{{ s.label }}</span></span>{% endif %}
+  </li>
+  {% endfor %}
+</ol>

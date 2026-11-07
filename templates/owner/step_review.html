@@ -1,0 +1,21 @@
+{% extends "owner/step_layout.html" %}
+{% block step_content %}
+<div class="surface p-4 mb-4">{% include "partials/_parking_summary.html" %}</div>
+{% if issues %}<div class="alert alert-danger"><strong>Fix these before submitting:</strong><ul class="mb-0">{% for i in issues %}<li>{{ i }}</li>{% endfor %}</ul></div>{% endif %}
+{% if warnings %}<div class="alert alert-warning"><strong>Suggestions:</strong><ul class="mb-0">{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
+<div class="surface p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+  <div>
+    {% if parking.status == "DRAFT" or parking.status == "REJECTED" %}
+      <div class="fw-semibold">{% if verification_required %}Ready to submit for verification?{% else %}Ready to go live?{% endif %}</div>
+      <div class="text-muted small">{% if verification_required %}The ParkShare team reviews new parkings before drivers can see them. You will be notified.{% else %}New parkings are visible to drivers immediately.{% endif %}</div>
+    {% elif parking.status == "PENDING" %}<div class="fw-semibold">Awaiting verification</div><div class="text-muted small">Drivers cannot see this parking yet.</div>
+    {% else %}<div class="fw-semibold">This parking is live</div><div class="text-muted small">Changes are saved as you go.</div>{% endif %}
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'owner:parking_edit' parking.pk prev_step %}"><i class="bi bi-arrow-left"></i> Back</a>
+    {% if parking.can_submit %}<form method="post" action="{% url 'owner:parking_submit' parking.pk %}">{% csrf_token %}
+      <button class="btn btn-primary" type="submit" {% if issues %}disabled{% endif %}>{% if verification_required %}Submit for verification{% else %}Publish parking{% endif %}</button></form>
+    {% else %}<a class="btn btn-primary" href="{% url 'owner:parking_list' %}">Done</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

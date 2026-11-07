@@ -1,0 +1,8 @@
+{% load ps_extras %}
+{% for r in items %}
+<article class="review {% if not forloop.last %}border-bottom{% endif %} py-3">
+  <div class="d-flex justify-content-between gap-2"><div>{% include "partials/_stars.html" with value=r.rating %} <strong class="ms-1">{{ r.driver|person_name }}</strong>{% if show_parking %} <span class="text-muted small">· {{ r.parking.name }}</span>{% endif %}</div><span class="small text-muted text-nowrap">{{ r.created_at|date:"d M Y" }}</span></div>
+  {% if r.comment %}<p class="mb-1 mt-1">{{ r.comment }}</p>{% endif %}
+  {% if r.owner_reply %}<div class="reply-box mt-2"><div class="small fw-semibold"><i class="bi bi-reply"></i> Reply from the owner</div><div class="small">{{ r.owner_reply }}</div></div>{% endif %}
+</article>
+{% empty %}<p class="text-muted mb-0">No reviews yet.</p>{% endfor %}

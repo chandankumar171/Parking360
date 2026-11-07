@@ -1,0 +1,27 @@
+{% load ps_extras %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <h3 class="h5">{{ parking.name }}</h3>
+    <p class="text-muted">{{ parking.description|linebreaksbr }}</p>
+    <dl class="kv">
+      <dt>Address</dt><dd>{{ parking.full_address }}</dd>
+      <dt>Map</dt><dd><a href="{{ parking.google_maps_url }}" target="_blank" rel="noopener noreferrer">Open in Google Maps <i class="bi bi-box-arrow-up-right"></i></a>{% if parking.latitude %} <span class="text-muted small">({{ parking.latitude }}, {{ parking.longitude }})</span>{% endif %}</dd>
+      <dt>Hours</dt><dd>{{ parking.opening_hours_text }} · {% if parking.is_open %}accepting bookings{% else %}closed for bookings{% endif %}</dd>
+      <dt>No-show grace</dt><dd>{{ parking.grace_minutes }} minutes</dd>
+      <dt>Cancellation</dt><dd>{% if parking.allow_cancellation %}Allowed until {{ parking.cancel_window_minutes|duration }} before start{% if parking.cancellation_charge_percent %}, {{ parking.cancellation_charge_percent|floatformat:"-2" }}% charge{% endif %}{% else %}Not allowed{% endif %}</dd>
+      {% if parking.contact_phone %}<dt>Contact</dt><dd>{{ parking.contact_phone }}</dd>{% endif %}
+    </dl>
+    {% if parking.amenity_list %}<div class="d-flex flex-wrap gap-2 mb-3">{% for icon, label in parking.amenity_list %}<span class="pill pill-teal"><i class="bi {{ icon }}"></i>{{ label }}</span>{% endfor %}</div>{% endif %}
+    {% if parking.rules_text %}<h4 class="h6">Rules</h4><p class="text-muted">{{ parking.rules_text|linebreaksbr }}</p>{% endif %}
+  </div>
+  <div class="col-lg-5">
+    {% with cover=parking.cover_photo %}{% if cover %}<img class="img-fluid rounded-4 mb-3" src="{{ cover.image|thumb:'800x500' }}" alt="Cover photo of {{ parking.name }}">{% endif %}{% endwith %}
+    <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Vehicle</th><th class="text-end">Bays</th><th class="text-end">Price</th></tr></thead>
+      <tbody>{% for t in parking.vehicle_types.all %}
+        <tr class="{% if not t.is_active %}text-muted{% endif %}"><td>{{ t.display_name }}{% if not t.is_active %} <span class="small">(paused)</span>{% endif %}<div class="small text-muted">Overtime {{ t.overtime_text }}</div></td>
+          <td class="text-end">{{ t.capacity }}</td><td class="text-end">{{ t.price_per_slot|rupees }}<div class="small text-muted">per {{ t.slot_minutes|duration }}</div></td></tr>
+      {% empty %}<tr><td colspan="3" class="text-muted">No vehicle types yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</div>

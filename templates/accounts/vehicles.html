@@ -1,0 +1,33 @@
+{% extends layout %}
+{% block page_title %}My vehicles{% endblock %}
+{% block heading %}My vehicles{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <h1 class="h3 mb-3">Saved vehicles</h1>
+    {% for v in vehicles %}
+    <div class="surface p-3 mb-3 d-flex align-items-center gap-3">
+      <span class="chip mb-0"><i class="bi bi-car-front"></i></span>
+      <div class="flex-grow-1"><div class="fw-bold">{{ v.plate_number }}</div><div class="text-muted small">{{ v.brand }} {{ v.model }}{% if v.color %} · {{ v.color }}{% endif %} · {{ v.get_category_display }}</div></div>
+      <form method="post" action="{% url 'accounts:vehicle_delete' v.pk %}" data-confirm="Remove {{ v.plate_number }} from your saved vehicles?">
+        {% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove {{ v.plate_number }}"><i class="bi bi-trash"></i></button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="surface empty"><i class="bi bi-car-front"></i>No vehicles saved yet. Add one and it will be pre-filled when you book.</div>
+    {% endfor %}
+  </div>
+  <div class="col-lg-5">
+    <form method="post" class="surface p-4" novalidate>
+      {% csrf_token %}
+      <h2 class="h5 mb-3">Add a vehicle</h2>
+      {% include "partials/_form_errors.html" %}
+      {% include "partials/_field.html" with field=form.category %}
+      {% include "partials/_field.html" with field=form.plate_number %}
+      <div class="row g-2"><div class="col-6">{% include "partials/_field.html" with field=form.brand %}</div><div class="col-6">{% include "partials/_field.html" with field=form.model %}</div></div>
+      {% include "partials/_field.html" with field=form.color %}
+      <button class="btn btn-primary w-100" type="submit">Save vehicle</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

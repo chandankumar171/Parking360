@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{% block page_title %}Dashboard{% endblock %} | ParkShare{% endblock %}
+{% block body %}
+<div class="ps-shell">
+  <aside class="ps-sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="ps-side-head"><a class="brand" href="{{ home_url }}">{% include "partials/_brand.html" %}</a></div>
+    <nav class="ps-side-nav">
+      {% for item in nav_items %}
+        {% if item.url_name %}
+        <a class="ps-side-link{% if item.active %} active{% endif %}" href="{% url item.url_name %}" title="{{ item.label }}"{% if item.active %} aria-current="page"{% endif %}>
+          <i class="bi {{ item.icon }}"></i><span class="ps-side-label">{{ item.label }}</span>{% if item.badge %}<span class="ps-soon bg-warning text-dark">{{ item.badge }}</span>{% endif %}</a>
+        {% else %}
+        <span class="ps-side-link is-soon" title="{{ item.label }} (coming soon)" aria-disabled="true">
+          <i class="bi {{ item.icon }}"></i><span class="ps-side-label">{{ item.label }}</span><span class="ps-soon">Soon</span></span>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="ps-side-foot"><span class="keep-expanded">{{ user.get_role_display }} panel</span></div>
+  </aside>
+  <div class="ps-backdrop" data-sidebar-close></div>
+  <div class="ps-main">
+    <header class="ps-topbar">
+      <button class="icon-btn" type="button" data-sidebar-toggle aria-controls="sidebar" aria-label="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
+      <h1 class="title">{% block heading %}Dashboard{% endblock %}</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        {% load ps_extras %}{% notification_bell %}
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+        {% include "partials/_user_menu.html" %}
+      </div>
+    </header>
+    <main class="ps-content">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+{% endblock %}

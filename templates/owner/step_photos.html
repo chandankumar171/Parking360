@@ -1,0 +1,38 @@
+{% extends "owner/step_layout.html" %}
+{% load ps_extras %}
+{% block step_content %}
+<div class="surface p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="h5 mb-0">Photos of the parking area</h3><span class="text-muted small">{{ photos|length }} of {{ max_photos }} used</span>
+  </div>
+  {% if photos %}
+  <div class="photo-grid mb-4">
+    {% for p in photos %}
+    <figure class="photo-tile">
+      <img src="{{ p.image|thumb:'480x320' }}" alt="Parking photo {{ forloop.counter }}" loading="lazy">
+      {% if p.is_cover %}<span class="pill pill-mark photo-cover">Cover</span>{% endif %}
+      <figcaption class="d-flex gap-1">
+        {% if not p.is_cover %}<form method="post" action="{% url 'owner:photo_cover' parking.pk p.pk %}">{% csrf_token %}<button class="btn btn-sm btn-light" type="submit">Make cover</button></form>{% endif %}
+        <form method="post" action="{% url 'owner:photo_delete' parking.pk p.pk %}" data-confirm="Delete this photo?">{% csrf_token %}<button class="btn btn-sm btn-danger" type="submit" aria-label="Delete photo"><i class="bi bi-trash"></i></button></form>
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% else %}<div class="empty"><i class="bi bi-images"></i>No photos yet. Drivers book more when they can see the place.</div>{% endif %}
+
+  {% if remaining > 0 %}
+  <form method="post" enctype="multipart/form-data" data-photo-form>
+    {% csrf_token %}
+    <label class="form-label" for="photos">Add photos (JPG, PNG or WebP, up to 5 MB each)</label>
+    <input class="form-control" type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+    <div class="form-text">You can add {{ remaining }} more.</div>
+    <div class="photo-preview mt-3" id="photo-preview"></div>
+    <div class="mt-3"><button class="btn btn-primary" type="submit" name="action" value="save"><i class="bi bi-cloud-upload"></i> Upload</button></div>
+  </form>
+  {% else %}<div class="alert alert-info mb-0">You have reached the {{ max_photos }}-photo limit. Delete one to add another.</div>{% endif %}
+</div>
+<div class="d-flex justify-content-between mt-4">
+  <a class="btn btn-outline-secondary" href="{% url 'owner:parking_edit' parking.pk prev_step %}"><i class="bi bi-arrow-left"></i> Back</a>
+  <a class="btn btn-primary" href="{% url 'owner:parking_edit' parking.pk next_step %}">Continue <i class="bi bi-arrow-right"></i></a>
+</div>
+{% endblock %}

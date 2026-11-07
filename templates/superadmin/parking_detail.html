@@ -1,0 +1,39 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}{{ parking.name }}{% endblock %}
+{% block heading %}Review parking{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div class="d-flex gap-2 align-items-center">{% include "partials/_status_pill.html" %}{% if parking.is_verified_badge %}{% include "partials/_verified_badge.html" %}{% endif %}
+    <span class="text-muted small">Owner: {{ parking.owner.owner_profile.business_name|default:parking.owner.full_name }} ({{ parking.owner.email }})</span></div>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'sadmin:queue' %}"><i class="bi bi-arrow-left"></i> Queue</a>
+</div>
+{% if parking.rejection_reason %}<div class="alert alert-secondary"><strong>Note on file:</strong> {{ parking.rejection_reason }}</div>{% endif %}
+{% if issues %}<div class="alert alert-danger"><strong>Incomplete:</strong> {{ issues|join:" " }}</div>{% endif %}
+<div class="surface p-4 mb-4">{% include "partials/_parking_summary.html" %}</div>
+{% if parking.photos.all|length > 1 %}<div class="photo-grid mb-4">{% for ph in parking.photos.all %}<figure class="photo-tile"><img src="{{ ph.image|thumb:'480x320' }}" alt="Photo {{ forloop.counter }}" loading="lazy"></figure>{% endfor %}</div>{% endif %}
+<div class="surface p-4">
+  <h3 class="h5 mb-3">Decision</h3>
+  <div class="row g-4">
+    {% if parking.status == "PENDING" or parking.status == "REJECTED" or parking.status == "APPROVED" %}
+    <div class="col-lg-4">
+      <form method="post" action="{% url 'sadmin:approve' parking.pk %}">{% csrf_token %}
+        <button class="btn btn-primary w-100" type="submit" {% if issues %}disabled{% endif %}><i class="bi bi-patch-check"></i> {% if parking.is_verified_badge %}Re-confirm verification{% else %}Approve and verify{% endif %}</button></form>
+      <p class="small text-muted mt-2 mb-0">Puts the parking live with the Verified badge.</p>
+    </div>
+    {% endif %}
+    {% if parking.status == "PENDING" or parking.status == "APPROVED" %}
+    <div class="col-lg-4"><form method="post" action="{% url 'sadmin:reject' parking.pk %}">{% csrf_token %}
+      <label class="form-label" for="r-reason">Reject with reason</label><textarea id="r-reason" class="form-control mb-2" name="reason" rows="2" required minlength="5" placeholder="What should the owner fix?"></textarea>
+      <button class="btn btn-outline-danger" type="submit">Reject</button></form></div>
+    {% endif %}
+    {% if parking.status == "APPROVED" %}
+    <div class="col-lg-4"><form method="post" action="{% url 'sadmin:suspend' parking.pk %}" data-confirm="Suspend {{ parking.name }}? It disappears from search immediately.">{% csrf_token %}
+      <label class="form-label" for="s-reason">Suspend (optional reason)</label><textarea id="s-reason" class="form-control mb-2" name="reason" rows="2"></textarea>
+      <button class="btn btn-outline-dark" type="submit">Suspend</button></form></div>
+    {% elif parking.status == "SUSPENDED" %}
+    <div class="col-lg-4"><form method="post" action="{% url 'sadmin:unsuspend' parking.pk %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Restore parking</button></form></div>
+    {% elif parking.status == "DRAFT" %}<div class="col-12 text-muted">Still a draft. The owner has not submitted it.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

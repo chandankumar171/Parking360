@@ -1,0 +1,28 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}{% if kind == "owners" %}Owners{% else %}Drivers{% endif %}{% endblock %}
+{% block heading %}{% if kind == "owners" %}Owners{% else %}Drivers{% endif %}{% endblock %}
+{% block content %}
+<form class="row g-2 mb-3" method="get" role="search">
+  <div class="col-md-5"><input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Name, email, mobile{% if kind == 'owners' %} or business{% endif %}" aria-label="Search"></div>
+  <div class="col-md-3"><select class="form-select" name="state" aria-label="Account state"><option value="">All accounts</option><option value="active" {% if state == "active" %}selected{% endif %}>Active</option><option value="disabled" {% if state == "disabled" %}selected{% endif %}>Disabled</option></select></div>
+  <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Search</button></div>
+</form>
+<div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>{% if kind == "owners" %}Owner{% else %}Driver{% endif %}</th><th>Contact</th><th>Joined</th>
+    {% if kind == "owners" %}<th class="text-end">Parkings</th><th class="text-end">Bookings</th><th class="text-end">Net earned</th><th class="text-end">Owed</th>
+    {% else %}<th class="text-end">Points</th><th class="text-end">Bookings</th><th class="text-end">No-shows</th><th class="text-end">Cancelled</th>{% endif %}<th></th></tr></thead>
+  <tbody>{% for u in rows %}<tr>
+    <td><a class="fw-semibold" href="{% url 'sadmin:user_detail' u.pk %}">{% if kind == "owners" %}{{ u.owner_profile.business_name|default:u.full_name }}{% else %}{{ u.full_name }}{% endif %}</a>
+      {% if kind == "owners" %}<div class="small text-muted">{{ u.full_name }}</div>{% endif %}{% if not u.is_active %} <span class="pill bg-danger-subtle text-danger-emphasis">Disabled</span>{% endif %}</td>
+    <td class="small">{{ u.email }}<div class="text-muted">{{ u.phone|default:"" }}</div></td>
+    <td class="small text-nowrap">{{ u.date_joined|date:"d M Y" }}</td>
+    {% if kind == "owners" %}<td class="text-end">{{ u.parkings_live }} live<div class="small text-muted">{{ u.parkings_total }} total</div></td><td class="text-end">{{ u.bookings_n }}</td>
+      <td class="text-end">{{ u.earned|rupees }}</td><td class="text-end fw-semibold">{{ u.owed|rupees }}</td>
+    {% else %}<td class="text-end"><strong>{{ u.points }}</strong> <span class="pill bg-{{ u.points_tier.css }}-subtle text-{{ u.points_tier.css }}-emphasis">{{ u.points_tier.label }}</span></td>
+      <td class="text-end">{{ u.bookings_n }}</td><td class="text-end">{{ u.no_shows }}</td><td class="text-end">{{ u.cancelled }}</td>{% endif %}
+    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'sadmin:user_detail' u.pk %}">View</a></td></tr>
+  {% empty %}<tr><td colspan="8"><div class="empty"><i class="bi bi-people"></i>No {{ kind }} found.</div></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

@@ -1,0 +1,5 @@
+<div class="d-flex flex-wrap gap-2 mb-3">
+  {% for value, label, n in tabs %}
+  <a class="btn btn-sm {% if value == active_status %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status={{ value }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ label }} <span class="opacity-75">{{ n }}</span></a>
+  {% endfor %}
+</div>

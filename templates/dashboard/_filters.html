@@ -1,0 +1,26 @@
+<form id="dash-filters" class="surface p-3 mb-4" novalidate aria-label="Dashboard filters">
+  <div class="d-flex flex-wrap gap-3 align-items-end">
+    <div>
+      <div class="form-label">Period</div>
+      <div class="seg" role="radiogroup" aria-label="Period type">
+        {% for value, label in modes %}<input class="btn-check" type="radio" name="mode" id="mode-{{ value }}" value="{{ value }}" {% if initial.mode == value %}checked{% endif %}><label class="seg-btn" for="mode-{{ value }}">{{ label }}</label>{% endfor %}
+      </div>
+    </div>
+    <div data-mode-show="year month"><label class="form-label" for="f-year">Year</label>
+      <select class="form-select" id="f-year" name="year">{% for y in years %}<option value="{{ y }}" {% if initial.year == y %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></div>
+    <div data-mode-show="month"><label class="form-label" for="f-month">Month</label>
+      <select class="form-select" id="f-month" name="month">{% for n, name in months %}<option value="{{ n }}" {% if initial.month == n %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+    <div data-mode-show="week"><label class="form-label" for="f-date">Any day in the week</label><input class="form-control" type="date" id="f-date" name="date" value="{{ initial.date }}"></div>
+    <div data-mode-show="custom"><label class="form-label" for="f-start">From</label><input class="form-control" type="date" id="f-start" name="start" value="{{ initial.start }}"></div>
+    <div data-mode-show="custom"><label class="form-label" for="f-end">To</label><input class="form-control" type="date" id="f-end" name="end" value="{{ initial.end }}"></div>
+    <div><label class="form-label" for="f-group">Group by</label>
+      <select class="form-select" id="f-group" name="group"><option value="">Automatic</option>{% for g, l in groups %}<option value="{{ g }}" {% if initial.group == g %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    {% if my_parkings %}<div><label class="form-label" for="f-parking">Parking</label>
+      <select class="form-select" id="f-parking" name="parking"><option value="">All parkings</option>{% for p in my_parkings %}<option value="{{ p.pk }}" {% if initial.parking == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>{% endif %}
+    <div class="ms-lg-auto dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-download"></i> Export CSV</button>
+      <ul class="dropdown-menu dropdown-menu-end">{% for url, label in exports %}<li><a class="dropdown-item" data-export href="{{ url }}" data-base="{{ url }}">{{ label }}</a></li>{% endfor %}</ul>
+    </div>
+  </div>
+  <div class="small text-muted mt-3" aria-live="polite"><i class="bi bi-calendar3"></i> <span id="dash-period-label">{{ period_label }}</span></div>
+</form>

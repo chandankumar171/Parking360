@@ -1,0 +1,46 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}{% if params.q %}Parking in {{ params.q }}{% else %}Find parking{% endif %} | ParkShare{% endblock %}
+{% block page %}
+<form method="get" id="search-form" role="search">
+<input type="hidden" name="lat" id="geo-lat" value="{{ params.lat|default_if_none:'' }}"><input type="hidden" name="lng" id="geo-lng" value="{{ params.lng|default_if_none:'' }}">
+<div class="container pt-4">
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <div class="hero-search flex-grow-1" style="max-width:none">
+      <i class="bi bi-geo-alt" aria-hidden="true"></i><label for="q" class="visually-hidden">Area, city or parking name</label>
+      <input id="q" name="q" type="search" class="form-control" list="suggest-list" value="{{ params.q|default:'' }}" placeholder="Area, city or parking name" autocomplete="off" maxlength="120" data-suggest-url="{% url 'parkings:suggest' %}">
+      <datalist id="suggest-list"></datalist>
+      <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+    <button class="btn btn-outline-secondary" type="button" id="near-me"><i class="bi bi-crosshair"></i> Near me</button>
+    <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas"><i class="bi bi-sliders"></i> Filters{% if active_count %} ({{ active_count }}){% endif %}</button>
+  </div>
+  <div class="row g-4">
+    <aside class="col-lg-3">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="filterCanvas" aria-labelledby="filterTitle">
+        <div class="offcanvas-header"><h2 class="offcanvas-title h5" id="filterTitle">Filters</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filterCanvas" aria-label="Close"></button></div>
+        <div class="offcanvas-body"><div class="surface p-3 filter-side w-100">{% include "parkings/_filters.html" %}</div></div>
+      </div>
+    </aside>
+    <div class="col-lg-9">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div><strong>{{ page.paginator.count }}</strong> parking{{ page.paginator.count|pluralize }} found
+          {% if window %}<span class="text-muted">for {{ window.0|date:"D d M, h:i A" }}</span>{% endif %}
+          {% if has_geo %}<span class="pill pill-teal ms-1"><i class="bi bi-geo-alt-fill"></i>within
+            <select class="form-select form-select-sm d-inline-block w-auto border-0 bg-transparent p-0 ps-1" name="radius" aria-label="Radius" data-autosubmit>{% for v, l in radii %}<option value="{{ v }}" {% if params.radius == v or not params.radius and v == "10" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></span>
+            <button type="button" class="btn btn-link btn-sm p-0 ms-1" id="clear-geo">Clear</button>{% endif %}</div>
+        <div class="d-flex align-items-center gap-2"><label class="small text-muted" for="sort">Sort</label>
+          <select class="form-select form-select-sm w-auto" id="sort" name="sort" data-autosubmit>{% for v, l in sorts %}<option value="{{ v }}" {% if params.sort == v or not params.sort and v == "relevance" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="row g-3">
+        {% for p in parkings %}<div class="col-md-6 col-xl-4">{% include "partials/_parking_card.html" %}</div>
+        {% empty %}<div class="col-12"><div class="surface empty"><i class="bi bi-search"></i><h2 class="h5 text-body">No parking matches yet</h2>
+          <p class="mb-2">Try a nearby area, remove a filter, or pick another time.</p><a class="btn btn-outline-primary" href="{% url 'parkings:search' %}">Reset search</a></div></div>{% endfor %}
+      </div>
+      {% include "partials/_pagination_qs.html" %}
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/search.js' %}"></script>{% endblock %}

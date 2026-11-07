@@ -1,0 +1,42 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Create your account | ParkShare{% endblock %}
+{% block aside_title %}Find a spot or earn from yours{% endblock %}
+{% block content %}
+<h1 class="h2 mb-1">Create your account</h1>
+<p class="text-muted mb-4">Already registered? <a href="{% url 'accounts:login' %}">Log in</a></p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  <fieldset class="mb-4">
+    <legend class="form-label">I want to</legend>
+    <div class="role-picker">
+      {% for radio in form.role %}
+      <label class="role-card">
+        {{ radio.tag }}
+        <span class="role-card__body">
+          {% if radio.data.value == "OWNER" %}<i class="bi bi-building"></i><strong>List my parking</strong><small>Earn from your space and manage bookings.</small>
+          {% else %}<i class="bi bi-car-front"></i><strong>Find parking</strong><small>Book a bay and pay online.</small>{% endif %}
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+    {% for e in form.role.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+  </fieldset>
+  {% include "partials/_field.html" with field=form.full_name %}
+  <div class="row g-3">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.email %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.phone %}</div>
+  </div>
+  <div data-owner-only {% if form.role.value != "OWNER" %}hidden{% endif %}>{% include "partials/_field.html" with field=form.business_name %}</div>
+  <div class="row g-3">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.password1 %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.password2 %}</div>
+  </div>
+  <div class="form-check mb-4">
+    <input class="form-check-input{% if form.terms.errors %} is-invalid{% endif %}" type="checkbox" name="terms" id="id_terms" {% if form.terms.value %}checked{% endif %}>
+    <label class="form-check-label" for="id_terms">I agree to the <a href="{% url 'core:terms' %}" target="_blank" rel="noopener">Terms of Use</a> and the <a href="{% url 'core:privacy' %}" target="_blank" rel="noopener">Privacy Policy</a></label>
+    {% for e in form.terms.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+  </div>
+  <button class="btn btn-primary btn-lg w-100" type="submit">Create account</button>
+</form>
+{% endblock %}

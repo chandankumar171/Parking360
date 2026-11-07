@@ -1,0 +1,10 @@
+{% load ps_extras %}
+<tr>
+  <td><div class="d-flex align-items-center gap-2">
+    {% with cover=p.cover_photo %}{% if cover %}<img class="rounded-3" src="{{ cover.image|thumb:'96x72' }}" width="56" height="42" alt="" loading="lazy" style="object-fit:cover">{% else %}<span class="chip mb-0"><i class="bi bi-image"></i></span>{% endif %}{% endwith %}
+    <div><a class="fw-semibold" href="{% url 'sadmin:parking_detail' p.pk %}">{{ p.name }}</a><div class="small text-muted">{{ p.area }}, {{ p.city }}</div></div></div></td>
+  <td>{{ p.owner.owner_profile.business_name|default:p.owner.full_name }}<div class="small text-muted">{{ p.owner.email }}</div></td>
+  <td>{% include "partials/_status_pill.html" with parking=p %} {% if p.is_verified_badge %}{% include "partials/_verified_badge.html" %}{% endif %}</td>
+  <td class="text-muted small">{{ p.submitted_at|date:"d M Y, H:i"|default:"Not submitted" }}</td>
+  <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'sadmin:parking_detail' p.pk %}">Review</a></td>
+</tr>

@@ -1,0 +1,29 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Owner payouts{% endblock %}
+{% block heading %}Owner payouts{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="stat mb-3"><div class="label">Total owed to owners</div><div class="value">{{ total_owed|rupees }}</div></div>
+    <div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+      <thead><tr><th>Owner</th><th class="text-end">Earned</th><th class="text-end">Refunded</th><th class="text-end">Paid out</th><th class="text-end">Owed</th></tr></thead>
+      <tbody>{% for o in owners %}<tr><td>{{ o.user.owner_profile.business_name|default:o.user.full_name }}<div class="small text-muted">{{ o.user.email }}</div></td>
+        <td class="text-end">{{ o.earned|rupees }}</td><td class="text-end">{{ o.refunded|rupees }}</td><td class="text-end">{{ o.paid|rupees }}</td><td class="text-end fw-bold">{{ o.balance|rupees }}</td></tr>
+      {% empty %}<tr><td colspan="5"><div class="empty"><i class="bi bi-cash-stack"></i>No owner earnings yet.</div></td></tr>{% endfor %}</tbody></table></div></div>
+    {% if recent %}<h2 class="h5 mt-4">Recent payouts</h2><div class="surface"><div class="table-responsive"><table class="table mb-0"><tbody>
+      {% for e in recent %}<tr><td class="small text-nowrap">{{ e.created_at|date:"d M Y" }}</td><td>{{ e.owner.email }}</td><td class="small">{{ e.reference }}</td><td class="text-end">{{ e.amount|rupees }}</td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+  </div>
+  <div class="col-lg-4">
+    <form method="post" action="{% url 'sadmin:record_payout' %}" class="surface p-4" novalidate>{% csrf_token %}
+      <h2 class="h5 mb-3">Record a payout</h2>
+      <p class="small text-muted">Pay the owner by UPI or bank transfer first, then record it here so their balance is updated.</p>
+      <div class="mb-3"><label class="form-label" for="po-owner">Owner</label><select class="form-select" id="po-owner" name="owner" required><option value="">Choose...</option>{% for o in owners %}<option value="{{ o.user.pk }}">{{ o.user.owner_profile.business_name|default:o.user.full_name }} (owed {{ o.balance|rupees }})</option>{% endfor %}</select></div>
+      <div class="mb-3"><label class="form-label" for="po-amount">Amount (₹)</label><input class="form-control" id="po-amount" name="amount" type="number" step="0.01" min="0.01" required></div>
+      <div class="mb-3"><label class="form-label" for="po-ref">Payment reference</label><input class="form-control" id="po-ref" name="reference" maxlength="100" required placeholder="UPI or bank transfer id"></div>
+      <div class="mb-3"><label class="form-label" for="po-note">Note (optional)</label><input class="form-control" id="po-note" name="note" maxlength="255"></div>
+      <button class="btn btn-primary w-100" type="submit">Record payout</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

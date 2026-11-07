@@ -1,0 +1,13 @@
+<div class="dropdown">
+  <button class="btn p-0 border-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+    {% if user.avatar_url %}<img src="{{ user.avatar_url }}" class="avatar" alt="">{% else %}<span class="avatar">{{ user.initials }}</span>{% endif %}
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+    <li class="px-3 py-2"><div class="fw-semibold">{{ user.full_name }}</div><div class="small text-muted">{{ user.get_role_display }}</div></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+    <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}"><i class="bi bi-key me-2"></i>Change password</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Log out</button></form></li>
+  </ul>
+</div>

@@ -1,0 +1,25 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Bookings{% endblock %}
+{% block heading %}Bookings{% endblock %}
+{% block content %}
+<form class="row g-2 mb-3" method="get" role="search">
+  <div class="col-md-4"><input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Code, plate or driver" aria-label="Search"></div>
+  <div class="col-md-3"><select class="form-select" name="parking" aria-label="Parking"><option value="">All parkings</option>{% for p in my_parkings %}<option value="{{ p.pk }}" {% if parking == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><select class="form-select" name="status" aria-label="Status"><option value="">Active and past</option>{% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filter</button></div>
+</form>
+<div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>When</th><th>Parking</th><th>Driver and vehicle</th><th>Code</th><th class="text-end">Amount</th><th>Status</th><th></th></tr></thead>
+  <tbody>{% for b in page %}<tr>
+    <td class="text-nowrap small">{{ b.start_at|date:"d M, h:i A" }}<div class="text-muted">{{ b.duration_minutes|duration }}</div></td>
+    <td>{{ b.parking.name }}</td>
+    <td>{{ b.driver.full_name }}<div class="small text-muted">{{ b.vehicle_number_plate }} · {{ b.vehicle_brand_model }}</div></td>
+    <td><code>{{ b.booking_code|default:"-" }}</code></td>
+    <td class="text-end">{{ b.total_paid|default:b.base_amount|rupees }}</td>
+    <td><span class="pill bg-{{ b.status_css }}-subtle text-{{ b.status_css }}-emphasis">{{ b.get_status_display }}</span></td>
+    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'owner:booking_detail' b.pk %}">Open</a></td></tr>
+  {% empty %}<tr><td colspan="7"><div class="empty"><i class="bi bi-calendar2-check"></i>No bookings yet.</div></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

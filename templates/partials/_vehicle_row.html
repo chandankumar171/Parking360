@@ -1,0 +1,27 @@
+<div class="vt-row surface p-3 p-md-4 mb-3" data-vt-row>
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <h3 class="h6 mb-0"><i class="bi bi-car-front me-1"></i>Vehicle type</h3>
+    <div><span hidden>{{ form.DELETE }}</span>
+      <button type="button" class="btn btn-sm btn-outline-danger" data-vt-remove><i class="bi bi-trash"></i> Remove</button></div>
+  </div>
+  {% if form.non_field_errors %}<div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.category %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.label %}</div>
+    <div class="col-md-4">{% include "partials/_field.html" with field=form.capacity %}</div>
+    <div class="col-md-4">{% include "partials/_field.html" with field=form.slot_minutes %}</div>
+    <div class="col-md-4">{% include "partials/_field.html" with field=form.price_per_slot %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.min_slots %}</div>
+    <div class="col-md-6">{% include "partials/_field.html" with field=form.max_slots %}</div>
+  </div>
+  <div class="vt-overtime rounded-3 p-3 mt-2" style="background:var(--ps-bg)">
+    <div class="fw-semibold mb-2"><i class="bi bi-stopwatch me-1"></i>Overtime pricing</div>
+    <div class="row g-3">
+      <div class="col-md-4">{% include "partials/_field.html" with field=form.overtime_block_minutes %}</div>
+      <div class="col-md-4">{% include "partials/_field.html" with field=form.overtime_charge %}</div>
+      <div class="col-md-4">{% include "partials/_field.html" with field=form.overtime_free_minutes %}</div>
+    </div>
+  </div>
+  <div class="form-check form-switch mt-3">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label></div>
+</div>

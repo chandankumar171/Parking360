@@ -1,0 +1,99 @@
+{% extends "layouts/driver.html" %}
+{% load ps_extras static %}
+{% block page_title %}Booking #{{ booking.pk }}{% endblock %}
+{% block content %}
+<div class="mx-auto" style="max-width:46rem">
+  {% csrf_token %}
+  <a class="small" href="{% url 'bookings:list' %}"><i class="bi bi-arrow-left"></i> My bookings</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 my-3">
+    <h1 class="h3 mb-0">Booking #{{ booking.pk }}</h1>
+    <span class="pill bg-{{ booking.status_css }}-subtle text-{{ booking.status_css }}-emphasis fs-6">{{ booking.get_status_display }}</span>
+  </div>
+
+  {% if booking.status == "PENDING_PAYMENT" %}
+    {% if booking.hold_active %}
+    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+      <span><i class="bi bi-hourglass-split me-1"></i>Your bay is held for <strong data-countdown="{{ booking.hold_seconds_left }}">--:--</strong></span>
+      <form method="post" action="{% url 'bookings:release' booking.pk %}" data-confirm="Release this bay? You will need to book again.">{% csrf_token %}<button class="btn btn-sm btn-outline-dark" type="submit">Release hold</button></form>
+    </div>
+    <div class="action-panel mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div><div class="fs-4 fw-bold font-display">{{ booking.base_amount|rupees }}</div><div class="small text-muted">Secure payment by Razorpay (UPI, cards, netbanking)</div></div>
+      {% if razorpay_ready %}<button class="btn btn-primary btn-lg" type="button" data-pay-url="{% url 'payments:booking_order' booking.pk %}"><i class="bi bi-lock me-1"></i>Pay {{ booking.base_amount|rupees }}</button>
+      {% else %}<div class="alert alert-danger mb-0 py-2">Online payments are not set up yet.</div>{% endif %}
+    </div>
+    {% else %}<div class="alert alert-secondary">This hold expired and the bay was released. <a href="{{ booking.parking.get_absolute_url }}">Book again</a>. If you paid just now, your booking will confirm automatically or be refunded.</div>{% endif %}
+  {% endif %}
+
+  {% if booking.booking_code and booking.status != "CANCELLED" and booking.status != "NO_SHOW" %}
+  <div class="code-card mb-4">
+    {% qr_code booking.booking_code %}
+    <div><div class="small opacity-75 mb-1">Show this code at the gate</div><div class="code-display">{{ booking.booking_code }}</div>
+      <div class="small opacity-75 mt-2">{% if booking.status == "CONFIRMED" %}Check in from {{ booking.start_at|date:"h:i A" }} (up to {{ booking.grace_minutes }} min late){% elif booking.status == "CHECKED_IN" %}Parked since {{ booking.checked_in_at|date:"d M, h:i A" }}. Show the code again when you leave.{% elif booking.status == "COMPLETED" %}Stay completed{% endif %}</div></div>
+  </div>
+  {% endif %}
+
+  {% if overtime_due %}
+  <div class="action-panel mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div><div class="fw-bold">Overtime to pay: {{ booking.overtime_amount|rupees }}</div><div class="small text-muted">{{ booking.overtime_minutes }} extra minutes. The owner can finish your checkout once this is paid.</div></div>
+    <button class="btn btn-primary btn-lg" type="button" data-pay-url="{% url 'payments:overtime_order' booking.pk %}"><i class="bi bi-lock me-1"></i>Pay {{ booking.overtime_amount|rupees }}</button>
+  </div>
+  {% endif %}
+
+  <div class="surface p-4 mb-3">
+    <h2 class="h5 mb-3">{{ booking.parking.name }}</h2>
+    <dl class="kv mb-0">
+      <dt>Where</dt><dd>{{ booking.parking.full_address }}<br><a href="{{ booking.parking.google_maps_url }}" target="_blank" rel="noopener noreferrer">Directions <i class="bi bi-box-arrow-up-right"></i></a></dd>
+      {% if booking.status == "CONFIRMED" or booking.status == "CHECKED_IN" or booking.status == "REFUND_REQUESTED" or booking.status == "COMPLETED" %}{% if booking.parking.contact_phone %}<dt>Contact</dt><dd>{{ booking.parking.contact_phone }}</dd>{% endif %}{% endif %}
+      <dt>From</dt><dd>{{ booking.start_at|date:"D d M Y, h:i A" }}</dd>
+      <dt>Until</dt><dd>{{ booking.end_at|date:"D d M Y, h:i A" }} ({{ booking.duration_minutes|duration }})</dd>
+      <dt>Vehicle</dt><dd>{{ booking.vehicle_number_plate }} · {{ booking.vehicle_brand_model }} · {{ booking.get_vehicle_category_display }}</dd>
+      {% if booking.checked_out_at %}<dt>Left at</dt><dd>{{ booking.checked_out_at|date:"d M, h:i A" }}</dd>{% endif %}
+    </dl>
+  </div>
+
+  <div class="surface p-4 mb-3">
+    <h2 class="h5 mb-3">Price</h2>
+    <div class="money-line"><span>{{ booking.slots }} × {{ booking.slot_minutes|duration }} at {{ booking.price_per_slot|rupees }}</span><span>{{ booking.base_amount|rupees }}</span></div>
+    {% if booking.overtime_amount %}<div class="money-line"><span>Overtime ({{ booking.overtime_minutes }} min)</span><span>{{ booking.overtime_amount|rupees }}</span></div>{% endif %}
+    {% if booking.total_paid %}<div class="money-line total"><span>Paid</span><span>{{ booking.total_paid|rupees }}</span></div>{% endif %}
+    <p class="small text-muted mt-2 mb-0">Overtime: {{ booking.overtime_charge|rupees }} per {{ booking.overtime_block_minutes }} min{% if booking.overtime_free_minutes %} after {{ booking.overtime_free_minutes }} free minutes{% endif %}, charged only if you stay past the end time.</p>
+  </div>
+
+  {% if refunds %}
+  <div class="surface p-4 mb-3"><h2 class="h5 mb-3">Cancellation and refund</h2>
+    <ul class="timeline">{% for r in refunds %}
+      <li class="{% if r.status == 'REFUNDED' %}on{% endif %}"><span class="dot"></span><div>
+        <div class="fw-semibold">{{ r.get_status_display }} · {{ r.amount|rupees }}{% if r.cancellation_charge %} <span class="text-muted fw-normal">({{ r.cancellation_charge|rupees }} cancellation charge kept)</span>{% endif %}</div>
+        <div class="small text-muted">{{ r.created_at|date:"d M, h:i A" }}{% if r.reason %} · {{ r.reason }}{% endif %}</div>
+        {% if r.status == "REJECTED" %}<div class="small text-danger">Declined: {{ r.rejection_reason }}</div>{% endif %}
+        {% if r.status == "PROCESSING" or r.status == "APPROVED" or r.status == "FAILED" %}<div class="small text-muted">The refund is being processed. It reaches your original payment method in 5 to 7 working days.</div>{% endif %}
+        {% if r.status == "REFUNDED" %}<div class="small text-success">Sent back to your original payment method.</div>{% endif %}</div></li>{% endfor %}</ul></div>
+  {% endif %}
+
+  {% if booking.status == "CONFIRMED" %}
+  <div class="surface p-4 mb-3"><h2 class="h5 mb-2">Need to cancel?</h2>
+    {% if booking.can_request_refund %}
+      <p class="text-muted small">You can cancel until {{ booking.cancel_deadline|date:"D d M, h:i A" }}.{% if booking.cancel_charge_percent %} {{ booking.cancel_charge_percent|floatformat:"-2" }}% is kept as a cancellation charge.{% else %} You get the full amount back.{% endif %} The owner reviews your request.</p>
+      <form method="post" action="{% url 'bookings:request_refund' booking.pk %}" data-confirm="Cancel this booking and request a refund?">{% csrf_token %}
+        <label class="form-label" for="r-reason">Reason</label><textarea class="form-control mb-2" id="r-reason" name="reason" rows="2" required minlength="3" maxlength="255"></textarea>
+        <button class="btn btn-outline-danger" type="submit">Cancel and request refund</button></form>
+    {% elif booking.allow_cancellation %}<p class="text-muted mb-0">The cancellation window closed at {{ booking.cancel_deadline|date:"D d M, h:i A" }}.</p>
+    {% else %}<p class="text-muted mb-0">This parking does not allow cancellations or refunds.</p>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if booking.status == "COMPLETED" %}
+  <div class="surface p-4 mb-3"><h2 class="h5 mb-2">Your review</h2>
+    {% with review=booking.review %}
+    {% if review %}
+      <div class="mb-1">{% include "partials/_stars.html" with value=review.rating %}</div>{% if review.comment %}<p class="mb-2">{{ review.comment }}</p>{% endif %}
+      {% if review.owner_reply %}<div class="reply-box"><div class="small fw-semibold">Reply from the owner</div><div class="small">{{ review.owner_reply }}</div></div>{% endif %}
+      {% if review.editable %}<a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'reviews:write' booking.pk %}">Edit review</a><span class="small text-muted ms-2">until {{ review.edit_deadline|date:"d M" }}</span>{% endif %}
+    {% else %}<p class="text-muted">How was your stay? Your rating helps other drivers.</p><a class="btn btn-primary" href="{% url 'reviews:write' booking.pk %}"><i class="bi bi-star"></i> Rate this parking</a>{% endif %}
+    {% endwith %}</div>
+  {% endif %}
+
+  {% if verdict %}<div class="surface p-4"><h2 class="h6">Owner's note</h2><p class="mb-0 text-muted">{% if verdict.satisfied %}<i class="bi bi-hand-thumbs-up text-success"></i> Satisfied{% else %}<i class="bi bi-hand-thumbs-down text-danger"></i> Not satisfied{% endif %}{% if verdict.comment %}: {{ verdict.comment }}{% endif %}</p></div>{% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/booking.js' %}"></script><script src="{% static 'js/payments.js' %}"></script>{% endblock %}

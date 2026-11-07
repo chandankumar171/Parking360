@@ -1,0 +1,21 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Earnings{% endblock %}
+{% block heading %}Earnings{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="stat" style="border-color:var(--ps-primary)"><div class="label">Owed to you now</div><div class="value">{{ balance|rupees }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="stat"><div class="label">Total earned</div><div class="value">{{ earned|rupees }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="stat"><div class="label">Refunded</div><div class="value">{{ refunded|rupees }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="stat"><div class="label">Paid out to you</div><div class="value">{{ paid_out|rupees }}</div></div></div>
+</div>
+<p class="text-muted">Payments are collected by ParkShare and paid out to you. {% if fees %}Platform fees so far: {{ fees|rupees }} (already deducted from your earnings).{% endif %}</p>
+<div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>When</th><th>Entry</th><th>Details</th><th class="text-end">Amount</th><th class="text-end">Balance</th></tr></thead>
+  <tbody>{% for e in page %}<tr><td class="small text-nowrap">{{ e.created_at|date:"d M Y, h:i A" }}</td><td>{{ e.get_entry_type_display }}</td>
+    <td class="small">{{ e.note }}{% if e.reference %} · ref {{ e.reference }}{% endif %}</td>
+    <td class="text-end {% if e.entry_type == 'CREDIT' %}text-success{% elif e.entry_type == 'REFUND_DEBIT' or e.entry_type == 'PAYOUT' %}text-danger{% else %}text-muted{% endif %}">{% if e.entry_type == 'REFUND_DEBIT' or e.entry_type == 'PAYOUT' %}-{% elif e.entry_type == 'CREDIT' %}+{% endif %}{{ e.amount|rupees }}</td>
+    <td class="text-end">{{ e.balance_after|rupees }}</td></tr>
+  {% empty %}<tr><td colspan="5"><div class="empty"><i class="bi bi-wallet2"></i>Earnings appear here after your first paid booking.</div></td></tr>{% endfor %}</tbody></table></div></div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

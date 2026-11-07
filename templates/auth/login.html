@@ -1,0 +1,17 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Log in | ParkShare{% endblock %}
+{% block content %}
+<h1 class="h2 mb-1">Log in</h1>
+<p class="text-muted mb-4">New here? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  {% include "partials/_field.html" with field=form.username %}
+  {% include "partials/_field.html" with field=form.password %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <span></span><a href="{% url 'accounts:password_reset' %}" class="small">Forgot password?</a>
+  </div>
+  <button class="btn btn-primary btn-lg w-100" type="submit">Log in</button>
+</form>
+{% endblock %}

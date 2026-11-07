@@ -1,0 +1,15 @@
+{% extends "owner/step_layout.html" %}
+{% block step_content %}
+<form method="post" novalidate data-vt-form>
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<div class="alert alert-danger">{% for e in formset.non_form_errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+  <p class="text-muted">Add each kind of vehicle you accept, with its own number of bays, slot price and overtime rate. For example a 2-wheeler at ₹20 per hour and a car at ₹50 per hour.</p>
+  <div id="vt-list">
+    {% for form in formset %}{% include "partials/_vehicle_row.html" %}{% endfor %}
+  </div>
+  <template id="vt-empty">{% include "partials/_vehicle_row.html" with form=formset.empty_form %}</template>
+  <button type="button" class="btn btn-outline-primary" id="vt-add"><i class="bi bi-plus-lg"></i> Add another vehicle type</button>
+  {% include "partials/_step_nav.html" %}
+</form>
+{% endblock %}

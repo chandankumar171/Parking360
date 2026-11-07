@@ -1,0 +1,17 @@
+{% extends "layouts/panel.html" %}
+{% block page_title %}{% if parking and parking.pk %}{{ parking.name }}{% else %}New parking{% endif %}{% endblock %}
+{% block heading %}{% if parking and parking.pk %}Edit parking{% else %}Add parking{% endif %}{% endblock %}
+{% block extra_js %}{% load static %}<script src="{% static 'js/parking.js' %}"></script>{% endblock %}
+{% block content %}
+<div class="mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <div>
+    <h2 class="h4 mb-1">{% if parking and parking.pk %}{{ parking.name }}{% else %}Create a parking{% endif %}</h2>
+    {% if parking and parking.pk %}<div class="d-flex gap-2 align-items-center">{% include "partials/_status_pill.html" %}{% if parking.is_verified_badge %}{% include "partials/_verified_badge.html" %}{% endif %}</div>{% endif %}
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'owner:parking_list' %}"><i class="bi bi-arrow-left"></i> All parkings</a>
+</div>
+{% if parking and parking.status == "REJECTED" and parking.rejection_reason %}
+<div class="alert alert-danger"><strong>Changes requested:</strong> {{ parking.rejection_reason }}</div>{% endif %}
+{% include "partials/_stepper.html" %}
+<div class="mt-4">{% block step_content %}{% endblock %}</div>
+{% endblock %}

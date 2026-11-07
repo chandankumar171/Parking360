@@ -1,0 +1,31 @@
+{% extends "layouts/panel.html" %}
+{% load ps_extras %}
+{% block page_title %}Payments and refunds{% endblock %}
+{% block heading %}Payments and refunds{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-4"><div class="stat"><div class="label">Collected</div><div class="value">{{ gross|rupees }}</div></div></div>
+  <div class="col-6 col-lg-4"><div class="stat"><div class="label">Refunded</div><div class="value">{{ refunded|rupees }}</div></div></div>
+  <div class="col-12 col-lg-4"><div class="stat" style="border-color:var(--ps-primary)"><div class="label">Platform earnings</div><div class="value">{{ platform_earnings|rupees }}</div></div></div>
+</div>
+<div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+  <ul class="nav seg"><li class="nav-item"><a class="nav-link {% if tab == 'payments' %}active{% endif %}" href="?tab=payments">Payments</a></li><li class="nav-item"><a class="nav-link {% if tab == 'refunds' %}active{% endif %}" href="?tab=refunds">Refunds</a></li></ul>
+  <form method="get" role="search"><input type="hidden" name="tab" value="{{ tab }}"><div class="input-group"><input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Order id, plate or code" aria-label="Search"><button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button></div></form>
+</div>
+<div class="surface"><div class="table-responsive"><table class="table align-middle mb-0">
+  {% if tab == "payments" %}
+  <thead><tr><th>When</th><th>Booking</th><th>Type</th><th>Razorpay ids</th><th class="text-end">Amount</th><th>Status</th></tr></thead>
+  <tbody>{% for p in page %}<tr><td class="small text-nowrap">{{ p.created_at|date:"d M, h:i A" }}</td><td>#{{ p.booking_id }}<div class="small text-muted">{{ p.booking.parking.name }} · {{ p.booking.vehicle_number_plate }}</div></td><td>{{ p.get_kind_display }}</td>
+    <td class="small"><code>{{ p.razorpay_order_id }}</code><br><code>{{ p.razorpay_payment_id|default:"-" }}</code></td><td class="text-end">{{ p.amount|rupees }}<div class="small text-muted">fee {{ p.platform_fee_amount|rupees }}</div></td>
+    <td><span class="pill bg-secondary-subtle text-secondary-emphasis">{{ p.get_status_display }}</span>{% if p.failure_reason %}<div class="small text-danger">{{ p.failure_reason }}</div>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6"><div class="empty"><i class="bi bi-credit-card"></i>No payments yet.</div></td></tr>{% endfor %}</tbody>
+  {% else %}
+  <thead><tr><th>When</th><th>Booking</th><th>Razorpay refund</th><th class="text-end">Amount</th><th>Status</th></tr></thead>
+  <tbody>{% for r in page %}<tr><td class="small text-nowrap">{{ r.created_at|date:"d M, h:i A" }}</td><td>#{{ r.booking_id }}<div class="small text-muted">{{ r.booking.parking.name }} · {{ r.booking.vehicle_number_plate }}</div></td>
+    <td class="small"><code>{{ r.razorpay_refund_id|default:"-" }}</code></td><td class="text-end">{{ r.amount|rupees }}</td>
+    <td><span class="pill bg-secondary-subtle text-secondary-emphasis">{{ r.get_status_display }}</span>{% if r.error_message %}<div class="small text-danger">{{ r.error_message }}</div>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5"><div class="empty"><i class="bi bi-arrow-counterclockwise"></i>No refunds yet.</div></td></tr>{% endfor %}</tbody>
+  {% endif %}
+</table></div></div>
+{% include "partials/_pagination_qs.html" %}
+{% endblock %}

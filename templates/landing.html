@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block body %}
+{% include "partials/_navbar_public.html" %}
+
+<header class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="pill pill-teal mb-3"><i class="bi bi-patch-check-fill"></i>Verified listings, pay online</span>
+        <h1 class="mb-3">Reserve parking before you reach the gate</h1>
+        <p class="lead mb-4">Search by area, pay through Razorpay, and show a 6-character code at the entrance. Owners see every booking, check-in and rupee in one dashboard.</p>
+        <form class="hero-search mb-3" action="{% url 'parkings:search' %}" method="get" role="search">
+          <i class="bi bi-geo-alt" aria-hidden="true"></i>
+          <label for="hero-q" class="visually-hidden">Area, city or parking name</label>
+          <input id="hero-q" name="q" type="search" class="form-control" placeholder="Area, city or parking name" autocomplete="off" maxlength="120">
+          <button class="btn btn-primary" type="submit">Search parking</button>
+        </form>
+        <p class="mb-0 text-muted">Own a parking space? <a href="{% url 'accounts:signup' %}?role=OWNER" class="fw-semibold">List it on Parking360</a></p>
+      </div>
+      <div class="col-lg-6 pb-4">
+        <div class="lot" role="img" aria-label="Illustration of a parking lot with one free bay and one bay reserved with a booking code">
+          <div class="lot-row top">
+            <div class="bay"><span class="bay-label">A1</span><span class="car" style="--car:#6f74f3"></span></div>
+            <div class="bay free"><span class="bay-label">A2 free</span></div>
+            <div class="bay"><span class="bay-label">A3</span><span class="car" style="--car:#8b90ff"></span></div>
+            <div class="bay"><span class="bay-label">A4</span><span class="car" style="--car:#4c52d8"></span></div>
+          </div>
+          <div class="lot-lane"></div>
+          <div class="lot-row bottom">
+            <div class="bay"><span class="bay-label">B1</span><span class="car" style="--car:#5560e8"></span></div>
+            <div class="bay mine"><span class="bay-label">B2 yours</span><span class="car" style="--car:#ffc845"></span></div>
+            <div class="bay"><span class="bay-label">B3</span><span class="car" style="--car:#7d82f7"></span></div>
+            <div class="bay free"><span class="bay-label">B4 free</span></div>
+          </div>
+          <div class="ticket"><small>Booking confirmed</small><div class="code">K7M2QX</div><small>Show this code at entry</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+{% if featured %}
+<section class="block" id="featured">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+      <div><h2 class="mb-1">Verified parkings</h2><p class="text-muted mb-0">Reviewed and approved by the Parking360 team.</p></div>
+      <a class="btn btn-outline-primary" href="{% url 'parkings:search' %}?verified=on">Browse all verified</a>
+    </div>
+    <div class="row g-3">{% for p in featured %}<div class="col-md-6 col-lg-4">{% include "partials/_parking_card.html" with compact=True %}</div>{% endfor %}</div>
+    {% if cities %}<div class="d-flex flex-wrap gap-2 mt-4 align-items-center"><span class="text-muted">Popular cities:</span>
+      {% for c in cities %}<a class="pill pill-teal text-decoration-none" href="{% url 'parkings:search' %}?q={{ c.city|urlencode }}">{{ c.city }} ({{ c.n }})</a>{% endfor %}</div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block block-surface" id="how">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-5">
+        <h2 class="mb-3">How ParkShare works</h2>
+        <p class="text-muted mb-4">Two sides, one booking. Pick the side that fits you.</p>
+        <ul class="nav seg" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-drivers" type="button" role="tab" aria-selected="true">For drivers</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-owners" type="button" role="tab" aria-selected="false">For owners</button></li>
+        </ul>
+      </div>
+      <div class="col-lg-7">
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tab-drivers" role="tabpanel">
+            <div class="step"><span class="step-n">1</span><div><h3>Search</h3><p>Type an area and filter by vehicle type, price, CCTV, covered parking, EV charging and more.</p></div></div>
+            <div class="step"><span class="step-n">2</span><div><h3>Choose your time</h3><p>Pick vehicle type, start time and how long. You see straight away whether a bay is free for that window.</p></div></div>
+            <div class="step"><span class="step-n">3</span><div><h3>Pay with Razorpay</h3><p>Your booking is confirmed after payment, with a 6-character code and a QR to show at the gate.</p></div></div>
+            <div class="step"><span class="step-n">4</span><div><h3>Park and leave</h3><p>If you stay longer than booked, you pay only for the extra time when you check out.</p></div></div>
+          </div>
+          <div class="tab-pane fade" id="tab-owners" role="tabpanel">
+            <div class="step"><span class="step-n">1</span><div><h3>Create your listing</h3><p>Add photos, a Google Maps link, the vehicle types you accept and how many bays each has.</p></div></div>
+            <div class="step"><span class="step-n">2</span><div><h3>Set your rules</h3><p>Choose slot prices, overtime charges such as ₹6 a minute or ₹100 per 30 minutes, opening hours and cancellation policy.</p></div></div>
+            <div class="step"><span class="step-n">3</span><div><h3>Go live</h3><p>Once approved, drivers can find and book your parking. Full bays show as booked automatically.</p></div></div>
+            <div class="step"><span class="step-n">4</span><div><h3>Verify at the gate</h3><p>Enter the driver's code at entry and again at exit. Track earnings, reviews and driver history.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features">
+  <div class="container">
+    <h2 class="mb-2">Built around how parking really works</h2>
+    <p class="text-muted mb-4" style="max-width:52ch">Availability, overtime and trust are handled by the platform, so neither side argues at the gate.</p>
+    <div class="bento">
+      <article class="b-lg">
+        <div class="chip"><i class="bi bi-grid-3x3-gap"></i></div>
+        <h3>Availability per vehicle type and time</h3>
+        <p>A lot can be full at 2 PM and free at 6 PM. ParkShare checks capacity for your exact window, per vehicle type, so bays are never double-booked.</p>
+        <div class="capacity" aria-hidden="true">
+          <div><div class="row-top"><span>Car</span><span>8 of 12 free</span></div><div class="progress"><div class="progress-bar" style="width:66%"></div></div></div>
+          <div><div class="row-top"><span>Bike</span><span>21 of 30 free</span></div><div class="progress"><div class="progress-bar" style="width:70%"></div></div></div>
+          <div><div class="row-top"><span>Truck</span><span>1 of 2 free</span></div><div class="progress"><div class="progress-bar" style="width:50%"></div></div></div>
+        </div>
+      </article>
+      <article class="b-lg">
+        <div class="chip mark"><i class="bi bi-stopwatch"></i></div>
+        <h3>Overtime billed by the owner's own rate</h3>
+        <p>Owners set the price for extra time, for example ₹6 per minute or ₹100 per 30 minutes. At checkout the driver sees the exact amount and pays it online, so nothing is settled in cash arguments.</p>
+        <div class="mt-3 d-flex flex-wrap gap-2"><span class="pill pill-mark">45 min over at ₹100 / 30 min = ₹200</span></div>
+      </article>
+      <article class="b-sm"><div class="chip teal"><i class="bi bi-qr-code"></i></div><h3>Code check-in and check-out</h3><p>The owner confirms the code at entry and exit, so every stay has a record.</p></article>
+      <article class="b-sm"><div class="chip"><i class="bi bi-patch-check"></i></div><h3>Verified badge</h3><p>Listings reviewed by the ParkShare team carry a badge drivers can trust.</p></article>
+      <article class="b-sm"><div class="chip teal"><i class="bi bi-camera-video"></i></div><h3>Filters that matter</h3><p>CCTV, covered, guard, EV charging, 24x7 and cancellation options, all searchable.</p></article>
+      <article class="b-sm"><div class="chip mark"><i class="bi bi-star"></i></div><h3>Ratings both ways</h3><p>Drivers rate parkings. Owners record satisfied or not, which feeds a driver's points.</p></article>
+      <article class="b-sm"><div class="chip"><i class="bi bi-arrow-counterclockwise"></i></div><h3>Refunds through Razorpay</h3><p>Where a parking allows cancellation, refunds go back to the original payment method.</p></article>
+      <article class="b-sm"><div class="chip teal"><i class="bi bi-bar-chart-line"></i></div><h3>Owner analytics</h3><p>Earnings, occupancy and peak hours by day, month or year in live charts.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="block pt-0" id="owners">
+  <div class="container">
+    <div class="owners-band">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-6">
+          <h2 class="mb-3">Turn an empty bay into steady income</h2>
+          <p class="muted mb-4">List one parking or many. You decide vehicle types, prices, hours and rules. ParkShare handles payments and tracks what you are owed.</p>
+          <a class="btn btn-mark btn-lg" href="{% url 'accounts:signup' %}?role=OWNER">List your parking</a>
+        </div>
+        <div class="col-lg-6">
+          <ul>
+            <li><i class="bi bi-check-circle-fill"></i><span>Separate capacity and price for bikes, cars and heavy vehicles</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>See driver points, past bookings and reviews before check-in</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Approve or reject refund requests, or cancel a booking yourself</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Dashboard with earnings, bookings and occupancy by year, month or week</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block block-surface" id="faq">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-4"><h2 class="mb-3">Questions, answered</h2><p class="text-muted">Something else? Create an account and reach support from your profile.</p></div>
+      <div class="col-lg-8">
+        <div class="accordion" id="faqList">
+          <div class="accordion-item mb-2"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f1">Do I pay when I book?</button></h3>
+            <div id="f1" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">Yes. You pay the booking amount online through Razorpay. The booking is confirmed only after the payment succeeds.</div></div></div>
+          <div class="accordion-item mb-2"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">What if I stay longer than I booked?</button></h3>
+            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">The extra time is charged at the owner's overtime rate, which is shown on every listing. You pay it online when the owner checks you out.</div></div></div>
+          <div class="accordion-item mb-2"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Can I cancel and get a refund?</button></h3>
+            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">If the owner allows cancellation for that parking and you cancel before its cancellation window, you can request a refund. Once approved it goes back to your original payment method.</div></div></div>
+          <div class="accordion-item mb-2"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4">What does the Verified badge mean?</button></h3>
+            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">The ParkShare team reviewed the listing and approved it. Listings without the badge may still be available when verification is not required.</div></div></div>
+          <div class="accordion-item mb-2"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5">How do owners get paid?</button></h3>
+            <div id="f5" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">Payments are collected by ParkShare. Your earnings, minus the platform fee if one applies, are tracked in your dashboard and paid out to you.</div></div></div>
+          <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f6">What are driver points?</button></h3>
+            <div id="f6" class="accordion-collapse collapse" data-bs-parent="#faqList"><div class="accordion-body">Every driver starts with 100 points. Good stays add points; no-shows and unresolved checkouts reduce them. Owners can see a driver's points before accepting them at the gate.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-5"><a class="brand mb-3" href="{% url 'core:landing' %}">{% include "partials/_brand.html" %}</a><p style="max-width:36ch">Parking you can reserve, pay for and check into with a code.</p></div>
+      <div class="col-6 col-lg-2"><h4>Drivers</h4><ul class="list-unstyled d-grid gap-1"><li><a href="{% url 'accounts:signup' %}?role=DRIVER">Create account</a></li><li><a href="{% url 'accounts:login' %}">Log in</a></li><li><a href="#how">How it works</a></li></ul></div>
+      <div class="col-6 col-lg-2"><h4>Owners</h4><ul class="list-unstyled d-grid gap-1"><li><a href="{% url 'accounts:signup' %}?role=OWNER">List your parking</a></li><li><a href="#owners">Why list</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div class="col-lg-3"><h4>Company</h4><ul class="list-unstyled d-grid gap-1"><li><a href="#features">Features</a></li><li><a href="{% url 'accounts:password_reset' %}">Reset password</a></li><li><a href="{% url 'core:terms' %}">Terms of Use</a></li><li><a href="{% url 'core:privacy' %}">Privacy Policy</a></li>{% if SUPPORT_EMAIL %}<li><a href="mailto:{{ SUPPORT_EMAIL }}">{{ SUPPORT_EMAIL }}</a></li>{% endif %}</ul></div>
+    </div>
+    <hr class="border-secondary-subtle my-4">
+    <p class="small mb-0">&copy; {% now "Y" %} Parking360. All rights reserved.</p>
+  </div>
+</footer>
+{% endblock %}
