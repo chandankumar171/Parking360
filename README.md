@@ -1,4 +1,4 @@
-# ParkShare
+# Parking360(ParkShare)
 
 A parking marketplace. **Drivers** search, book a bay for a time window, pay through Razorpay and park with a 6-character code or QR.
 **Owners** list parkings, set vehicle types, prices and overtime rates, verify drivers at the gate, handle refunds and watch live
